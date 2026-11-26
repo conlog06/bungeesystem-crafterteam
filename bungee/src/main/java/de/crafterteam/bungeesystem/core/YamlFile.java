@@ -27,6 +27,14 @@ public final class YamlFile {
         return config;
     }
 
+    public void save() {
+        try {
+            ConfigurationProvider.getProvider(YamlConfiguration.class).save(config, new File(plugin.getDataFolder(), name));
+        } catch (IOException e) {
+            plugin.getLogger().log(Level.WARNING, "Konnte " + name + " nicht speichern", e);
+        }
+    }
+
     public void load() {
         File folder = plugin.getDataFolder();
         if (!folder.exists()) folder.mkdirs();
@@ -56,7 +64,7 @@ public final class YamlFile {
 
     /** Abschnitte, deren Einträge der Admin bewusst löschen darf (werden nicht wieder ergänzt). */
     private static final java.util.Set<String> USER_SECTIONS = java.util.Set.of(
-            "punish.reasons", "report.reasons", "chat.format.groups");
+            "punish.reasons", "report.reasons", "chat.format.groups", "server-commands", "links", "help.pages");
 
     private static boolean merge(Configuration from, Configuration into, String path) {
         boolean changed = false;

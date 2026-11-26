@@ -6,6 +6,33 @@
 # ═══════════════════════════════════════════════════════════════════
 
 prefix:
+  teamchat: '&#ff4b2b&lTEAM &8» &7'
+  adminchat: '&#c0392b&lADMIN &8» &7'
+  teamonline: '&#3a7bd5&lTEAM &8» &7'
+  jointo: '&#3a7bd5&lJOINTO &8» &7'
+  whereis: '&#3a7bd5&lWHEREIS &8» &7'
+  whereami: '&#3a7bd5&lSERVER &8» &7'
+  staffstats: '&#3a7bd5&lSTAFF &8» &7'
+  warn: '&#f7971e&lWARN &8» &7'
+  exemption: '&#56ab2f&lEXEMPTION &8» &7'
+  support: '&#00b09b&lSUPPORT &8» &7'
+  bugreport: '&#e94057&lBUG &8» &7'
+  maintenance: '&#f7971e&lWARTUNG &8» &7'
+  motd: '&#3a7bd5&lMOTD &8» &7'
+  hub: '&#00d2ff&lLOBBY &8» &7'
+  servers: '&#00d2ff&lSERVER &8» &7'
+  broadcast: '&#ff4b2b&lINFO &8» &7'
+  autobroadcast: '&#00d2ff&lINFO &8» &7'
+  links: '&#00d2ff&lLINKS &8» &7'
+  ping: '&#00d2ff&lPING &8» &7'
+  online: '&#00d2ff&lONLINE &8» &7'
+  debug: '&#3a7bd5&lDEBUG &8» &7'
+  poll: '&#f9d423&lUMFRAGE &8» &7'
+  joinme: '&#56ab2f&lJOINME &8» &7'
+  advert: '&#56ab2f&lWERBEN &8» &7'
+  coins: '&#f9d423&lCOINS &8» &7'
+  rankinfo: '&#3a7bd5&lRANG &8» &7'
+  teamspeak: '&#3a7bd5&lTEAMSPEAK &8» &7'
   default: '&#3a7bd5&lSYSTEM &8» &7'
   general: '&#3a7bd5&lSYSTEM &8» &7'
   ban: '&#ff4b2b&lBAN &8» &7'
@@ -36,6 +63,15 @@ general:
   no-addon: '{prefix}&7Auf diesem Server ist das &eBungeeSystem-Addon &7nicht installiert – Liste im Chat:'
   reloaded: '{prefix}&aKonfiguration & Nachrichten neu geladen.'
   info: '{prefix}&fBungeeSystem &7v{version} &8┃ &7Module: &f{modules} &8┃ &7Online: &f{players}'
+  module-disabled: '{prefix}&cDas Modul &e{module} &cist gerade deaktiviert.'
+  module-disabled-temp: '{prefix}&7Modul &e{module} &7bis zum Neustart &cdeaktiviert&7.'
+  module-enabled: '{prefix}&7Modul &e{module} &aaktiviert&7.'
+  module-not-loaded: '{prefix}&cModul &e{module} &cist nicht geladen (config.yml → modules).'
+  modules-header: '{prefix}&7Module &8(&f{count} geladen&8):'
+  modules-entry: '&8» &f{module} &8┃ {state} [&8[&aan&8]](/{cmd} modules enable {module}) [&8[&caus&8]](/{cmd} modules disable {module})'
+  module-state-on: '&aaktiv'
+  module-state-off: '&8nicht geladen'
+  module-state-paused: '&6pausiert'
   'on': '&aan'
   'off': '&caus'
   'yes': '&aJa'
@@ -142,6 +178,7 @@ history:
   state-active: '&caktiv'
   state-expired: '&7abgelaufen'
   state-removed: '&aaufgehoben &7({staff})'
+  cleared: '{prefix}&7History von &e{player} &7geleert &8(&f{count} Einträge&8)&7. Aktive Strafen bleiben.'
 
 # ─── Report ─────────────────────────────────────────────────────────
 report:
@@ -334,6 +371,12 @@ chat:
   toggle-off: '{prefix}&7Du siehst den Chat jetzt &cnicht mehr&7. &8(/chat zum Einschalten)'
   toggle-on: '{prefix}&7Du siehst den Chat wieder.'
   mention-actionbar: '&e{player} &7hat dich im Chat erwähnt!'
+  cleared-player: '{prefix}&7Chat von &e{player} &7geleert.'
+  filter-list: '{prefix}&7Gefilterte Wörter &8(&f{count}&8)&7: &f{words}'
+  filter-added: '{prefix}&e{word} &7wurde zum Filter hinzugefügt.'
+  filter-exists: '{prefix}&e{word} &7steht bereits im Filter.'
+  filter-removed: '{prefix}&e{word} &7wurde aus dem Filter entfernt.'
+  filter-missing: '{prefix}&e{word} &csteht nicht im Filter.'
 cmdblock:
   blocked: '{prefix}&cDieser Befehl ist gesperrt.'
 
@@ -382,3 +425,215 @@ gui:
     empty: '&aKeine offenen Reports'
     refresh: '&eAktualisieren'
     refresh-lore: ['&7Offene Reports: &f{count}']
+
+# ─── Team-Tools ─────────────────────────────────────────────────────
+teamchat:
+  usage: '{prefix}&7/{cmd} <Nachricht>'
+  format: '{prefix}&e{player} &8(&7{server}&8) &8» &f{message}'
+adminchat:
+  usage: '{prefix}&7/{cmd} <Nachricht>'
+  format: '{prefix}&e{player} &8(&7{server}&8) &8» &f{message}'
+teamonline:
+  header: '{prefix}&7Teammitglieder online: &f{count}'
+  empty: '&8» &7Gerade ist niemand vom Team online. Nutze &e/support&7.'
+  entry: '&8» &a● &f{player}'
+  entry-server: '&8» &a● &f{player} &8┃ &7{server}'
+jointo:
+  usage: '{prefix}&7/{cmd} <Spieler>'
+  same: '{prefix}&7Du bist bereits auf dem Server von &e{player}&7.'
+  success: '{prefix}&7Du springst zu &e{player} &7auf &f{server}&7…'
+whereis:
+  usage: '{prefix}&7/{cmd} <Spieler>'
+  result: '{prefix}&e{player} &7ist auf &f{server}&7. [&8[&eHinspringen&8]](/{jointo} {player})'
+whereami:
+  result: '{prefix}&7Du bist auf &f{server}&7.'
+staffstats:
+  usage: '{prefix}&7/{cmd} <Teammitglied> [Zeitraum z. B. 7d]'
+  all-time: 'gesamt'
+  result:
+    - '&8&m        &r &#3a7bd5&lSTAFF {player} &8(&7{period}&8) &8&m        '
+    - '&8» &7Bans: &f{bans} &8┃ &7Mutes: &f{mutes} &8┃ &7Kicks: &f{kicks}'
+    - '&8» &7Verwarnungen: &f{warns} &8┃ &7Reports erledigt: &f{reports} &8┃ &7Entbannt: &f{unbans}'
+warn:
+  usage: '{prefix}&7/{cmd} add <Spieler> <Grund> &8┃ &7remove <Spieler> &8┃ &7list <Spieler>'
+  success: '{prefix}&e{player} &7wurde verwarnt &8(&f{count}&8/&f{max}&8)&7: &f{reason}'
+  target:
+    - '{prefix}&cDu wurdest von &e{staff} &cverwarnt! &8(&f{count}&8/&f{max}&8)'
+    - '{prefix}&7Grund: &f{reason} &8┃ &7Bei &f{max} &7Verwarnungen wirst du gebannt.'
+  notify: '{prefix}&e{player} &7wurde von &e{staff} &7verwarnt &8(&f{count}&8/&f{max}&8)&7: &f{reason}'
+  removed: '{prefix}&7Letzte Verwarnung von &e{player} &7entfernt.'
+  none: '{prefix}&e{player} &7hat keine aktiven Verwarnungen.'
+  list-header: '{prefix}&7Verwarnungen von &e{player}&7: &f{count}&8/&f{max}'
+  list-entry: '&8» &f{id} &7{date} &8┃ &f{reason} &8┃ &7von &f{staff}'
+  ban-reason: '{count} Verwarnungen'
+  auto-ban: '{prefix}&e{player} &7wurde nach &f{count} &7Verwarnungen automatisch gebannt.'
+exemption:
+  usage: '{prefix}&7/{cmd} <Spieler> <ban|mute> <Prozent%|neue Restzeit>  &8z. B. &7/{cmd} Name ban 50%'
+  permanent: '{prefix}&cPermanente Strafen kann man nicht prozentual verkürzen – gib eine Restzeit an (z. B. 7d).'
+  not-shorter: '{prefix}&cDie neue Restzeit ist nicht kürzer als die aktuelle.'
+  success: '{prefix}&7Strafe von &e{player} &7verkürzt – noch &e{remaining}&7.'
+  removed: '{prefix}&7Strafe von &e{player} &7komplett aufgehoben.'
+  notify: '{prefix}&e{staff} &7hat die Strafe von &e{player} &7verkürzt &8(&7noch {remaining}&8)'
+support:
+  requested: '{prefix}&aDeine Support-Anfrage wurde gesendet. &7Ein Teammitglied meldet sich gleich. &8(/support close)'
+  no-staff: '{prefix}&7Gerade ist niemand vom Support online – deine Anfrage bleibt offen.'
+  already: '{prefix}&7Du hast bereits eine offene Anfrage.'
+  cancelled: '{prefix}&7Deine Anfrage wurde zurückgezogen.'
+  nothing: '{prefix}&7Du hast keine offene Anfrage.'
+  notify: '{prefix}&e{player} &7braucht Hilfe: &f{topic} [&a&lANNEHMEN](/{cmd} accept {player}|&aSupport übernehmen)'
+  notify-accepted: '{prefix}&e{staff} &7kümmert sich um &e{player}&7.'
+  no-request: '{prefix}&e{player} &chat keine offene Anfrage.'
+  accepted-staff: '{prefix}&7Support mit &e{player} &7gestartet &8(&f{topic}&8)&7. Schreiben: &e/{cmd} <Text> &8┃ &e/{cmd} close'
+  accepted-player: '{prefix}&e{staff} &7hilft dir jetzt. Schreiben: &e/{cmd} <Text> &8┃ &7Beenden: &e/{cmd} close'
+  in-session: '{prefix}&7Du bist im Support. &e/{cmd} <Text> &7zum Schreiben, &e/{cmd} close &7zum Beenden.'
+  chat: '&#00b09b&lSUPPORT &8┃ &e{player} &8» &f{message}'
+  closed: '{prefix}&7Der Support wurde beendet.'
+  help-staff: '{prefix}&e/{cmd} list &8┃ &e/{cmd} accept <Spieler> &8┃ &e/{cmd} close'
+  list-header: '{prefix}&7Offene Anfragen: &f{count}'
+  list-entry: '&8» &f{player} &8┃ &7{topic} &8┃ &7{date} [&a✔](/{cmd} accept {player})'
+bugreport:
+  usage: '{prefix}&7/{cmd} <Server> <Beschreibung>'
+  usage-staff: '{prefix}&7/{cmd} <Server> <Beschreibung> &8┃ &7list &8┃ &7info|accept|deny <ID>'
+  sent: '{prefix}&aDanke! &7Dein Bug-Report &f#{id} &7wurde gespeichert.'
+  too-many: '{prefix}&cDu hast schon zu viele offene Bug-Reports.'
+  notify: '{prefix}&e{player} &7hat einen Bug gemeldet &8(&f#{id}&8, {server}&8) [&e&lINFO](/{cmd} info {id})'
+  list-header: '{prefix}&7Offene Bug-Reports: &f{count}'
+  list-entry: '&8» &f#{id} &e{player} &8┃ &7{server} &8┃ &f{message} [&8[&eInfo&8]](/{cmd} info {id})'
+  info:
+    - '&8&m        &r &#e94057&lBUG #{id} &8&m        '
+    - '&8» &7Von: &f{player} &8┃ &7Server: &f{server} &8┃ &7{date}'
+    - '&8» &7Status: &f{status}'
+    - '&8» &f{message}'
+    - '&8» [&a&lANNEHMEN](/{cmd} accept {id}) [&c&lABLEHNEN](/{cmd} deny {id})'
+  not-found: '{prefix}&cBug-Report &e#{id} &cnicht gefunden.'
+  already-done: '{prefix}&7Bug-Report &f#{id} &7ist bereits bearbeitet.'
+  accepted: '{prefix}&7Bug &f#{id} &7angenommen – &e{player} &7bekommt &e{coins} Coins&7.'
+  denied: '{prefix}&7Bug &f#{id} &7abgelehnt.'
+  reporter-accepted: '{prefix}&aDein Bug-Report &f#{id} &awurde angenommen! &7+&e{coins} Coins'
+  reporter-denied: '{prefix}&7Dein Bug-Report &f#{id} &7wurde leider abgelehnt.'
+
+# ─── Netzwerk ───────────────────────────────────────────────────────
+maintenance:
+  usage: '{prefix}&7/{cmd} on|off &8┃ &7set <Dauer> &8┃ &7add|remove <Spieler> &8┃ &7list'
+  status: '{prefix}&7Wartung: {state} &8┃ &7Ende: &f{until} &8┃ &7Whitelist: &f{count}'
+  'on': '{prefix}&cWartungsarbeiten aktiviert. &7Nur Spieler auf der Whitelist dürfen joinen.'
+  'off': '{prefix}&aWartungsarbeiten beendet.'
+  set: '{prefix}&7Wartung für &e{duration} &7aktiviert – Release am &f{date}&7.'
+  added: '{prefix}&e{player} &7steht jetzt auf der Wartungs-Whitelist.'
+  already: '{prefix}&e{player} &7steht bereits auf der Whitelist.'
+  removed: '{prefix}&e{player} &7wurde von der Whitelist entfernt.'
+  not-listed: '{prefix}&e{player} &csteht nicht auf der Whitelist.'
+  list: '{prefix}&7Whitelist: &f{players}'
+  kick:
+    - '&#00d2ff&lCRAFTERTEAM'
+    - ''
+    - '&cWir haben gerade Wartungsarbeiten.'
+    - '&7Schau bald wieder vorbei!'
+    - ''
+    - '&7Infos: &bdiscord.gg/crafterteam'
+  kick-release:
+    - '&#00d2ff&lCRAFTERTEAM'
+    - ''
+    - '&eDer Server startet bald!'
+    - '&7Release in &f{remaining} &8(&7{date}&8)'
+    - ''
+    - '&7Infos: &bdiscord.gg/crafterteam'
+motd:
+  usage: '{prefix}&7/{cmd} normal|wartung 1|2 <Text> &8┃ &7Sonderzeichen: [>] [o] [*] [|]'
+  set: '{prefix}&7MOTD &f{kind} &7Zeile &f{line}&7: {text}'
+hub:
+  already: '{prefix}&7Du bist bereits in der Lobby.'
+  connecting: '{prefix}&7Du wirst zu &f{server} &7verbunden…'
+  none: '{prefix}&cGerade ist keine Lobby erreichbar.'
+servers:
+  already: '{prefix}&7Du bist bereits auf &f{server}&7.'
+  connecting: '{prefix}&7Du wirst zu &f{server} &7verbunden…'
+broadcast:
+  usage: '{prefix}&7/{cmd} <Nachricht>'
+  format:
+    - ''
+    - '{prefix}&f{message}'
+    - ''
+ping:
+  own: '{prefix}&7Dein Ping: {color}{ping}ms'
+  other: '{prefix}&7Ping von &e{player}&7: {color}{ping}ms'
+online:
+  total: '{prefix}&7Gerade sind &f{count} &7Spieler online.'
+  server: '&8» &f{server}&7: &f{count}'
+debug:
+  reset: '{prefix}&7Zurückgesetzt: &f{players} &7Spieler-Status, &f{servers} &7Server-Zähler.'
+
+# ─── Community ──────────────────────────────────────────────────────
+poll:
+  usage: '{prefix}&7/{cmd} create <Sekunden> <Frage> &8┃ &7close &8┃ &7ja|nein &8┃ &7info'
+  running: '{prefix}&cEs läuft bereits eine Umfrage.'
+  none: '{prefix}&7Gerade läuft keine Umfrage.'
+  started:
+    - ''
+    - '{prefix}&e{player} &7fragt: &f{question}'
+    - '{prefix}[&a&l✔ JA](/{cmd} ja|&aMit Ja stimmen)  [&c&l✖ NEIN](/{cmd} nein|&cMit Nein stimmen) &8(&7{seconds}s&8)'
+    - ''
+  info: '{prefix}&f{question} &8┃ &aJa: {yes} &8┃ &cNein: {no} &8┃ &7noch {seconds}s [&a✔](/{cmd} ja) [&c✖](/{cmd} nein)'
+  voted: '{prefix}&7Du hast mit {vote} &7gestimmt.'
+  changed: '{prefix}&7Stimme geändert auf {vote}&7.'
+  'yes': '&aJa'
+  'no': '&cNein'
+  result:
+    - ''
+    - '{prefix}&7Ergebnis: &f{question}'
+    - '{prefix}&aJa: {yes} &8({yes_percent}%) &8┃ &cNein: {no} &8({no_percent}%) &8┃ {winner}'
+    - ''
+  winner-yes: '&a&lJA gewinnt'
+  winner-no: '&c&lNEIN gewinnt'
+  winner-draw: '&e&lUnentschieden'
+joinme:
+  message:
+    - ''
+    - '&#56ab2f&lJOINME'
+    - '&e{player} &7spielt auf &f{server}'
+    - '[&a&l» JETZT NACHJOINEN «](/{cmd} join {player}|&7Klicken zum Mitspielen)'
+    - ''
+  sent: '{prefix}&7Dein JoinMe wurde gesendet.'
+  cooldown: '{prefix}&cDu kannst erst in &e{seconds}s &cwieder ein JoinMe senden.'
+  blocked: '{prefix}&cAuf &e{server} &cgeht kein JoinMe.'
+  expired: '{prefix}&cDieses JoinMe ist abgelaufen.'
+  same: '{prefix}&7Du bist bereits auf diesem Server.'
+  connecting: '{prefix}&7Du folgst &e{player} &7auf &f{server}&7…'
+advert:
+  usage: '{prefix}&7/{cmd} <Spieler> &8┃ &7Wer hat dich auf den Server gebracht? Ihr bekommt beide Coins (&e+{coins}&7 für dich).'
+  self: '{prefix}&cDu kannst dich nicht selbst angeben.'
+  already: '{prefix}&cDu hast bereits angegeben, wer dich geworben hat.'
+  too-late: '{prefix}&cDas geht nur in den ersten &e{days} &cTagen nach deinem ersten Join.'
+  not-older: '{prefix}&e{player} &cwar nicht vor dir auf dem Server.'
+  same-ip: '{prefix}&cDu kannst keinen Account mit deiner eigenen IP angeben.'
+  success: '{prefix}&aDanke! &7Du hast &e{player} &7angegeben und bekommst &e{coins} Coins&7.'
+  referrer: '{prefix}&e{player} &7wurde von dir geworben! &a+{coins} Coins'
+coins:
+  usage: '{prefix}&7/{cmd} &8┃ &7add|remove|set <Spieler> <Anzahl> &8┃ &7get <Spieler>'
+  own: '{prefix}&7Du hast &e{coins} Coins&7.'
+  other: '{prefix}&e{player} &7hat &e{coins} Coins&7.'
+  changed: '{prefix}&e{player} &7hat jetzt &e{coins} Coins&7.'
+  failed: '{prefix}&cÄnderung fehlgeschlagen &7(zu wenig Coins?) &8┃ &e{player}&7: &e{coins}'
+rankinfo:
+  list: '{prefix}&7Ränge: &f{ranks} &8┃ &7/{cmd} <Rang>'
+  not-found: '{prefix}&cRang &e{rank} &cnicht gefunden.'
+  info:
+    - '&8&m        &r &#3a7bd5&lRANG {rank} &8&m        '
+    - '&8» &7Anzeigename: &f{display}'
+    - '&8» &7Prefix: {prefix} &8┃ &7Suffix: {suffix}'
+    - '&8» &7Gewicht: &f{weight}'
+
+# ─── TeamSpeak ──────────────────────────────────────────────────────
+teamspeak:
+  bot-usage: '{prefix}&7/{cmd} open|close &8┃ &7Support gerade: {state}'
+  support-opened: '{prefix}&7Der TeamSpeak-Support wurde &ageöffnet&7.'
+  support-closed: '{prefix}&7Der TeamSpeak-Support wurde &cgeschlossen&7.'
+  error: '{prefix}&cTeamSpeak ist gerade nicht erreichbar.'
+  already: '{prefix}&7Du bist bereits verifiziert. &8(/tsverify delete)'
+  not-found: '{prefix}&cKein TeamSpeak-Nutzer &e{player} &cgefunden. &7Verbinde dich mit &b{ts} &7und nutze deinen Minecraft-Namen als Nickname.'
+  code-sent: '{prefix}&7Wir haben dir im TeamSpeak einen Code geschickt: &e/{cmd} <Code>'
+  wrong-code: '{prefix}&cFalscher oder abgelaufener Code. &7Starte neu mit &e/tsverify&7.'
+  verified: '{prefix}&aDu bist jetzt im TeamSpeak verifiziert!'
+  removed: '{prefix}&7Deine TeamSpeak-Verifizierung wurde entfernt.'
+  removed-other: '{prefix}&7Verifizierung von &e{player} &7entfernt.'
+  not-verified: '{prefix}&e{player} &7ist nicht verifiziert.'

@@ -151,6 +151,17 @@ public final class Database {
                         + "reporter_name varchar(16) not null, target varchar(36) not null, target_name varchar(16) not null, reason varchar(128) not null, "
                         + "server varchar(64) not null default '', created bigint not null, status varchar(16) not null default 'OPEN', "
                         + "handler varchar(16) not null default '', handled_at bigint not null default 0, index idx_status (status))");
+                st.executeUpdate("create table if not exists bs_settings (k varchar(64) not null primary key, v text not null)");
+                st.executeUpdate("create table if not exists bs_warns (id int auto_increment primary key, uuid varchar(36) not null, "
+                        + "player_name varchar(16) not null, staff_name varchar(64) not null, reason varchar(128) not null, created bigint not null, "
+                        + "active tinyint(1) not null default 1, index idx_uuid (uuid))");
+                st.executeUpdate("create table if not exists bs_bugreports (id int auto_increment primary key, uuid varchar(36) not null, "
+                        + "player_name varchar(16) not null, server varchar(64) not null, message text not null, created bigint not null, "
+                        + "status varchar(16) not null default 'OPEN', handler varchar(16) not null default '', index idx_status (status))");
+                st.executeUpdate("create table if not exists bs_adverts (uuid varchar(36) not null primary key, referrer varchar(36) not null, "
+                        + "created bigint not null, index idx_referrer (referrer))");
+                st.executeUpdate("create table if not exists bs_ts_verify (uuid varchar(36) not null primary key, ts_uid varchar(64) not null, "
+                        + "created bigint not null)");
                 // ---- LobbySystem-Tabellen (falls der Proxy zuerst startet)
                 st.executeUpdate("create table if not exists ls_players (uuid varchar(36) not null primary key, name varchar(16) not null, "
                         + "coins bigint not null default 0, lose int not null default 0, playtime bigint not null default 0, "

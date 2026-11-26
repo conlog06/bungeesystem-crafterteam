@@ -40,6 +40,7 @@ public final class Bridge implements Listener {
 
     private final BungeeSystem plugin;
     private final Map<Integer, CompletableFuture<Boolean>> coinRequests = new ConcurrentHashMap<>();
+    private final Map<Integer, CompletableFuture<Long>> valueRequests = new ConcurrentHashMap<>();
     private final AtomicInteger ids = new AtomicInteger();
     /** Server, auf denen das Addon (GUIs) läuft. */
     private final Set<String> addonServers = ConcurrentHashMap.newKeySet();
@@ -157,6 +158,54 @@ public final class Bridge implements Listener {
         });
     }
 
+    /** Coins gutschreiben (über den Server des Spielers, sonst direkt in der DB). */
+    public CompletableFuture<Boolean> addCoins(UUID uuid, long amount) {
+        if (amount <= 0) return takeCoins(uuid, -amount);
+        ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
+        if (p == null || p.getServer() == null) return addCoinsDb(uuid, amount);
+        int id = ids.incrementAndGet();
+        CompletableFuture<Boolean> answer = new CompletableFuture<>();
+        coinRequests.put(id, answer);
+        send(p, "COINS_ADD", out -> {
+            out.writeInt(id);
+            out.writeUTF(uuid.toString());
+            out.writeLong(amount);
+        });
+        return answer.completeOnTimeout(null, 3, TimeUnit.SECONDS).thenCompose(ok -> {
+            coinRequests.remove(id);
+            return ok == null ? addCoinsDb(uuid, amount) : CompletableFuture.completedFuture(ok);
+        });
+    }
+
+    private CompletableFuture<Boolean> addCoinsDb(UUID uuid, long amount) {
+        return plugin.db().submit(con -> de.crafterteam.bungeesystem.core.Database.exec(con,
+                "update ls_players set coins = coins + ? where uuid = ?", amount, uuid.toString()) > 0);
+    }
+
+    /** Guthaben lesen (DB-Stand; Server-Caches können kurzzeitig abweichen). */
+    public CompletableFuture<Long> coins(UUID uuid) {
+        ProxiedPlayer p = ProxyServer.getInstance().getPlayer(uuid);
+        if (p != null && p.getServer() != null) {
+            int id = ids.incrementAndGet();
+            CompletableFuture<Long> answer = new CompletableFuture<>();
+            valueRequests.put(id, answer);
+            send(p, "COINS_GET", out -> {
+                out.writeInt(id);
+                out.writeUTF(uuid.toString());
+            });
+            return answer.completeOnTimeout(null, 2, TimeUnit.SECONDS).thenCompose(v -> {
+                valueRequests.remove(id);
+                return v != null && v >= 0 ? CompletableFuture.completedFuture(v) : coinsDb(uuid);
+            });
+        }
+        return coinsDb(uuid);
+    }
+
+    private CompletableFuture<Long> coinsDb(UUID uuid) {
+        return plugin.db().submit(con -> de.crafterteam.bungeesystem.core.Database.longValue(con,
+                "select coins from ls_players where uuid = ?", -1, uuid.toString()));
+    }
+
     private CompletableFuture<Boolean> takeCoinsDb(UUID uuid, long amount) {
         return plugin.db().submit(con -> de.crafterteam.bungeesystem.core.Database.exec(con,
                 "update ls_players set coins = coins - ? where uuid = ? and coins >= ?", amount, uuid.toString(), amount) > 0);
@@ -189,6 +238,12 @@ public final class Bridge implements Listener {
                     String run = line;
                     ProxyServer.getInstance().getScheduler().runAsync(plugin,
                             () -> ProxyServer.getInstance().getPluginManager().dispatchCommand(target, run));
+                }
+                case "COINS_VALUE" -> {
+                    int id = in.readInt();
+                    long v = in.readLong();
+                    CompletableFuture<Long> f = valueRequests.remove(id);
+                    if (f != null) f.complete(v);
                 }
                 case "COINS_RESULT" -> {
                     int id = in.readInt();

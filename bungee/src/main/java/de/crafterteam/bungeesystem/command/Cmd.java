@@ -19,12 +19,15 @@ public abstract class Cmd extends Command implements TabExecutor {
 
     protected final BungeeSystem plugin;
     private final String perm;
+    /** Modul, zu dem der Befehl gehört (für /bungeesystem modules disable). */
+    private final String module;
 
     protected Cmd(BungeeSystem plugin, String[] names, String permission) {
         // Permission an BungeeCord geben → Befehl taucht ohne Recht nicht in der Tab-Vervollständigung auf
         super(names[0], permission, Arrays.copyOfRange(names, 1, names.length));
         this.plugin = plugin;
         this.perm = permission;
+        this.module = plugin.currentModule();
     }
 
     protected Messages m() {
@@ -33,6 +36,10 @@ public abstract class Cmd extends Command implements TabExecutor {
 
     @Override
     public final void execute(CommandSender sender, String[] args) {
+        if (module != null && !plugin.moduleActive(module)) {
+            m().send(sender, "general.module-disabled", "module", module);
+            return;
+        }
         if (perm != null && !sender.hasPermission(perm)) {
             m().send(sender, "general.no-permission");
             return;

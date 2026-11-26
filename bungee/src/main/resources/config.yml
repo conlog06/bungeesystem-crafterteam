@@ -13,16 +13,52 @@ mysql:
   pool-size: 3
   properties: useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=utf8&serverTimezone=UTC
 
-# Module an/aus (nach Änderung Proxy neu starten)
+# Module an/aus (nach Änderung Proxy neu starten; kurzzeitig: /bungeesystem modules disable <Modul>)
 modules:
+  # Strafen & Team
   punish: true
   report: true
+  notify: true
+  warn: true
+  exemption: true
+  teamchat: true
+  adminchat: true
+  teamonline: true
+  jointo: true
+  whereis: true
+  staffstats: true
+  support: true
+  bugreport: true
+  # Social
   friends: true
   party: true
   clan: true
   onlinetime: true
+  # Chat
   chat: true
   cmdblock: true
+  # Netzwerk
+  maintenance: true
+  motd: true
+  hub: true
+  servers: true
+  broadcast: true
+  autobroadcast: true
+  help: true
+  links: true
+  ping: true
+  online: true
+  whereami: true
+  debug: true
+  # Community
+  poll: true
+  joinme: true
+  advert: true
+  coins: true
+  rankinfo: true
+  # Extern (erst Zugangsdaten unten eintragen)
+  discord: false
+  teamspeak: false
 
 # Spielerzahlen aller Server mit Spielern in ls_servers schreiben (Freunde-Status in der Lobby)
 sync-server-status: true
@@ -52,6 +88,33 @@ commands:
   globalmute: [globalmute, gmute]
   chatclear: [chatclear, clearchat]
   chat: [chat, togglechat]
+  teamchat: [teamchat, tc]
+  adminchat: [adminchat, ac]
+  teamonline: [teamonline, teaminfo]
+  jointo: [jointo, goto]
+  whereis: [whereis, find]
+  staffstats: [staff, staffstats]
+  warn: [warn, warns]
+  exemption: [exemption, ea]
+  support: [support]
+  bugreport: [bugreport, bug]
+  maintenance: [maintenance, wartung]
+  motd: [motd]
+  # /l und /lobby: in einer Lobby wird man zum Spawn teleportiert (LobbySystem)
+  hub: [hub, lobby, l]
+  broadcast: [broadcast, bc]
+  help: [help, hilfe]
+  ping: [ping]
+  online: [online]
+  whereami: [whereami]
+  debugreset: [debugreset]
+  poll: [poll, umfrage]
+  joinme: [joinme]
+  advert: [advert, geworben]
+  coins: [coins]
+  rankinfo: [rankinfo]
+  tsbot: [tsbot]
+  tsverify: [tsverify]
   admin: [bungeesystem, bsys]
 
 # ─── Ban / Mute ─────────────────────────────────────────────────────
@@ -169,4 +232,147 @@ cmdblock:
   # Befehle mit Namespace (bukkit:..., minecraft:...) immer sperren
   block-namespaced: true
   # '*' am Ende = alles, was so beginnt
-  commands: [pl, plugins, ver, version, about, icanhasbukkit, '?', help, bukkit, paper, spigot, timings, me, tps, mspt]
+  commands: [pl, plugins, ver, version, about, icanhasbukkit, '?', bukkit, paper, spigot, timings, me, tps, mspt]
+
+# ═══════════════════════════════════════════════════════════════════
+#  Team-Tools
+# ═══════════════════════════════════════════════════════════════════
+warn:
+  max: 3                    # ab so vielen aktiven Verwarnungen automatisch Ban
+  ban-reason: ''            # ID einer Vorlage aus punish.reasons (leer = eigener Grund + ban-duration)
+  ban-duration: 3d
+
+bugreport:
+  reward-coins: 250         # Coins für angenommene Bugs
+  max-open: 3
+
+# ═══════════════════════════════════════════════════════════════════
+#  Netzwerk
+# ═══════════════════════════════════════════════════════════════════
+# MOTD in der Serverliste. Ingame änderbar: /motd normal|wartung 1|2 <Text>
+# Platzhalter {online} {max} · Sonderzeichen [>] » · [<] « · [o] ● · [*] ✦ · [|] ┃ · Hex &#rrggbb
+motd:
+  normal:
+    line1: '&#00d2ff&lCRAFTERTEAM &8[|] &7Dein Minecraft-Netzwerk'
+    line2: '&8[>] &eMissileWars &8[o] &aLobby &8[o] &bEvents'
+  maintenance:
+    line1: '&#00d2ff&lCRAFTERTEAM &8[|] &cWartungsarbeiten'
+    line2: '&7Wir sind bald wieder da! &8[>] &bdiscord.gg/crafterteam'
+    version: '&4✖ Wartung'
+    version-release: '&cRelease in {remaining}'
+
+hub:
+  servers: ['Lobby*']       # Lobby mit den wenigsten Spielern wird gewählt
+
+# Eigene Befehle, die auf einen Server schicken
+server-commands:
+  bauserver: { server: Build-1, permission: bungeesystem.server.build, aliases: [buildserver] }
+  devserver: { server: Dev-1, permission: bungeesystem.server.dev, aliases: [] }
+  testserver: { server: Test-1, permission: bungeesystem.server.test, aliases: [] }
+
+autobroadcast:
+  interval-seconds: 300
+  random: false
+  ignored-servers: []
+  messages:
+    - '{prefix}&7Besuche unseren Discord: [&b&ndiscord.gg/crafterteam](url:https://discord.gg/crafterteam|&7Öffnen)'
+    - '{prefix}&7Regelverstoß gesehen? Melde ihn mit &e/report <Spieler> <Grund>&7.'
+    - ['{prefix}&7Lade deine Freunde ein!', '{prefix}&7Mit &e/advert <Name> &7bekommt ihr beide Coins.']
+
+help:
+  pages:
+    '1':
+      - '&8&m        &r &#00d2ff&lHILFE &8(&7{page}/{pages}&8) &8&m        '
+      - '&8[>] &e/friend &8┃ &7Freunde · &e/party &8┃ &7Party · &e/clan &8┃ &7Clan'
+      - '&8[>] &e/msg &8┃ &7Nachricht · &e/report &8┃ &7Spieler melden'
+      - '&8[>] &e/hub &8┃ &7Zur Lobby · &e/onlinetime &8┃ &7Onlinezeit'
+      - '&8[>] [&7weiter »](/{cmd} {next})'
+    '2':
+      - '&8&m        &r &#00d2ff&lHILFE &8(&7{page}/{pages}&8) &8&m        '
+      - '&8[>] &e/support &8┃ &7Hilfe vom Team · &e/bugreport &8┃ &7Bug melden'
+      - '&8[>] &e/discord &8┃ &e/ts &8┃ &e/web &8┃ &7Links'
+      - '&8[>] &e/advert <Name> &8┃ &7Wer hat dich eingeladen?'
+      - '&8[>] [&7« zurück](/{cmd} {prev})'
+
+links:
+  discord:
+    aliases: [dc]
+    lines: ['{prefix}&7Discord: [&b&ndiscord.gg/crafterteam](url:https://discord.gg/crafterteam|&7Öffnen)']
+  teamspeak:
+    aliases: [ts]
+    lines: ['{prefix}&7TeamSpeak: &bts.crafterteam.de']
+  web:
+    aliases: [website]
+    lines: ['{prefix}&7Website: [&b&ncrafterteam.de](url:https://crafterteam.de|&7Öffnen)']
+  forum:
+    aliases: []
+    lines: ['{prefix}&7Forum: [&b&ncrafterteam.de/forum](url:https://crafterteam.de/forum|&7Öffnen)']
+
+# ═══════════════════════════════════════════════════════════════════
+#  Community
+# ═══════════════════════════════════════════════════════════════════
+poll:
+  vote-permission: false    # true = nur mit bungeesystem.poll.vote abstimmen
+
+joinme:
+  cooldown-seconds: 300
+  valid-seconds: 300
+  head: true                # Kopf des Spielers als 8×8-Pixel im Chat
+  head-url: 'https://mc-heads.net/avatar/{uuid}/8.png'
+  blocked-servers: []
+
+advert:
+  reward-new: 250           # neuer Spieler
+  reward-referrer: 500      # Werber
+  max-days: 7               # nur in den ersten X Tagen nach dem ersten Join
+
+# ═══════════════════════════════════════════════════════════════════
+#  Discord (Webhooks: Kanal-Einstellungen → Integrationen → Webhooks → URL kopieren)
+# ═══════════════════════════════════════════════════════════════════
+discord:
+  username: CrafterTeam
+  # Nachricht mit Status/MOTD/Spielern – wird regelmäßig bearbeitet
+  status-webhook: ''
+  status-interval-seconds: 60
+  status-title: CrafterTeam Netzwerk
+  server-ip: play.crafterteam.de
+  icon-url: ''
+  # Log für Strafen & Co.
+  log-webhook: ''
+  log-types: [ban, mute, kick]
+  log-titles:
+    ban: '🔨 Ban'
+    mute: '🔇 Mute'
+    kick: '👢 Kick'
+    report: '🚩 Report'
+    chat: '💬 Chat-Filter'
+
+# ═══════════════════════════════════════════════════════════════════
+#  TeamSpeak 3 (ServerQuery-Zugang: Tools → ServerQuery-Login im TS-Client)
+# ═══════════════════════════════════════════════════════════════════
+teamspeak:
+  host: localhost
+  query-port: 10011
+  server-port: 9987
+  query-user: serveradmin
+  query-password: ''
+  nickname: CrafterTeam-Bot
+  address: ts.crafterteam.de
+  support:
+    channel-id: 0           # Support-Warteraum
+    name-open: '[cspacer]» Support | Geöffnet'
+    name-closed: '[cspacer]» Support | Geschlossen'
+    staff-groups: [6]       # Servergruppen-IDs, die !open/!close dürfen
+    notify-group: 0         # !notify – Gruppe für Support-Benachrichtigungen
+    quiet-group: 0          # !ruhe – "Bitte nicht stören"-Gruppe
+  verify:
+    group: 0                # Servergruppe nach /tsverify
+    require-same-ip: true   # TS & Minecraft müssen von derselben IP kommen
+    description: 'Minecraft: {name}'
+  texts:
+    code: 'Dein Minecraft-Code: {code} – gib ingame /tsverify {code} ein.'
+    help: 'Befehle: !open, !close, !notify, !ruhe'
+    opened: 'Support geöffnet.'
+    closed: 'Support geschlossen.'
+    no-rights: 'Dazu hast du keine Rechte.'
+    error: 'Das hat nicht geklappt.'

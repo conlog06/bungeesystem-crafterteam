@@ -54,6 +54,40 @@ Arbeitet mit derselben MySQL-Datenbank wie das [LobbySystem](https://github.com/
 > so funktioniert der Teamchat weiter. Mute, Globalmute, Spam- & Wortfilter gelten trotzdem überall.
 > Wer in der Lobby die Rang-Badges aus dem Ressourcenpaket im Chat behalten will, trägt dort `Lobby*` ein.
 
+### Team-Tools
+- **TeamChat** `/tc` · **AdminChat** `/ac` · **TeamOnline** `/teamonline` · **JoinTo** `/jointo` · **WhereIs** `/whereis`
+- **Warn** `/warn add|remove|list` – ab `warn.max` Verwarnungen automatisch Ban (Vorlage oder Dauer einstellbar)
+- **Exemption** `/ea <Spieler> <ban|mute> <50%|7d>` – Bans & Mutes verkürzen
+- **StaffStats** `/staff <Name> [7d]` – Bans, Mutes, Kicks, Warns, erledigte Reports eines Teammitglieds
+- **Support** `/support [Anliegen]` – Team nimmt an (`/support accept`), beide schreiben im privaten Support-Raum
+- **BugReport** `/bugreport <Server> <Text>` – Team: `list`, `info|accept|deny <ID>`; angenommene Bugs bringen Coins
+- `/history <Spieler> clear` löscht erledigte Einträge (aktive Strafen bleiben)
+
+### Netzwerk
+- **Wartung** `/wartung on|off|set 10d|add|remove|list` – eigene MOTD, Kick-Screen, Release-Countdown in der Serverliste,
+  Zutritt nur über die Whitelist (keine Permission – trag dich selbst ein!)
+- **MOTD** `/motd normal|wartung 1|2 <Text>` mit `[>]` » · `[o]` ● · `[*]` ✦ · `[|]` ┃ und Hex-Farben
+- **Hub** `/hub`, `/lobby`, `/l` – leerste Lobby; in einer Lobby teleportiert das LobbySystem zum Spawn
+- **Server-Befehle** (`/bauserver`, `/devserver` … frei in `server-commands`)
+- **Broadcast** `/bc` · **AutoBroadcast** (Liste, Intervall, zufällig) · **Help** `/help` (Seiten) · **Links** `/dc`, `/ts`, `/web`, `/forum`
+- **Ping** `/ping` · **Online** `/online` · **WhereAmI** `/whereami` · **DebugReset** `/debugreset` (Online-Status nach Absturz bereinigen)
+- **Module** `/bsys modules list|enable|disable|reload` – Module bis zum Neustart an-/ausschalten
+
+### Community
+- **Umfragen** `/poll create <Sekunden> <Frage>`, Abstimmen per Klick, `/poll close|info`
+- **JoinMe** `/joinme` – Nachricht mit dem Kopf des Spielers (8×8 Pixel) und Klick zum Nachjoinen
+- **Advert** `/advert <Name>` – wer dich geworben hat bekommt Coins, du auch (IP- & Zeit-Schutz)
+- **Coins** `/coins [add|remove|set|get]` – das gemeinsame LobbySystem/MissileWars-Guthaben
+- **RankInfo** `/rankinfo [Rang]` – Name, Prefix, Suffix, Gewicht (LuckPerms)
+- **Chat-Befehle** `/chat globalmute|clear [Spieler]|filter list|add|remove`
+
+### Discord & TeamSpeak (in der config einschalten)
+- **Discord** über Webhooks (kein Bot nötig): Status-Nachricht mit MOTD, Spielerzahl & Servern, die sich selbst aktualisiert,
+  und Log-Embeds bei Ban, Mute, Kick (Typen wählbar)
+- **TeamSpeak-Supportbot** über ServerQuery: `/tsbot open|close`, im TS per Privatnachricht `!open`, `!close`, `!notify`, `!ruhe`
+- **TeamSpeak-Verify** `/tsverify` → Code im TS → `/tsverify <Code>` → Servergruppe + Beschreibung = Minecraft-Name;
+  `/tsverify delete`, `/tsverify remove <Spieler>`
+
 ## Installation
 
 1. `BungeeSystem-x.jar` in den Proxy, `BungeeSystemAddon-x.jar` in alle Paper-Server.
@@ -85,7 +119,30 @@ Arbeitet mit derselben MySQL-Datenbank wie das [LobbySystem](https://github.com/
 | `/globalmute [Server]` | `bungeesystem.chat.globalmute` | Chat aus/an |
 | `/chatclear [Server\|global]` | `bungeesystem.chat.clear` | Chat leeren |
 | `/chat` | `bungeesystem.chat.toggle` | Chat für sich selbst aus/an |
-| `/bungeesystem reload\|info` | `bungeesystem.admin` | Neu laden |
+| `/bungeesystem reload\|info\|modules …` | `bungeesystem.admin` | Neu laden, Module schalten |
+| `/tc`, `/ac` | `bungeesystem.teamchat`, `.adminchat` | Team-/Admin-Chat |
+| `/teamonline` | – (`bungeesystem.team` = wird gelistet) | Team online |
+| `/jointo`, `/whereis` | `bungeesystem.jointo`, `.whereis` | Nachspringen / finden |
+| `/warn …` | `bungeesystem.warn` | Verwarnungen |
+| `/ea <Spieler> <ban\|mute> <x%\|Zeit>` | `bungeesystem.exemption` | Strafe verkürzen |
+| `/staff <Name> [Zeitraum]` | `bungeesystem.staffstats` | Team-Statistik |
+| `/support …` | Team: `bungeesystem.support` | Support-Raum |
+| `/bugreport …` | Team: `bungeesystem.bugreport.manage` | Bug melden |
+| `/wartung …` | `bungeesystem.maintenance` | Wartung |
+| `/motd …` | `bungeesystem.motd` | MOTD ändern |
+| `/hub`, `/lobby`, `/l` | – | Zur Lobby |
+| `/bc <Text>` | `bungeesystem.broadcast` | Rundnachricht |
+| `/help`, `/dc`, `/ts`, `/web`, `/forum` | – | Hilfe & Links |
+| `/ping [Spieler]`, `/online`, `/whereami` | `.ping.others`, `.online.servers` für Details | Infos |
+| `/debugreset` | `bungeesystem.debug` | Online-Zähler bereinigen |
+| `/poll …` | `bungeesystem.poll.create`, `.close` | Umfragen |
+| `/joinme` | `bungeesystem.joinme` | JoinMe senden |
+| `/advert <Name>` | – | Werber angeben |
+| `/coins …` | Verwalten: `bungeesystem.coins.admin` | Coins |
+| `/rankinfo [Rang]` | `bungeesystem.rankinfo` | Rang-Infos |
+| `/tsbot open\|close` | `bungeesystem.tsbot` | TS-Support |
+| `/tsverify …` | `remove`: `bungeesystem.tsverify.manage` | TS-Verify |
+
 
 Alle Namen & Aliase sind in `config.yml → commands` änderbar (leere Liste = Befehl aus).
 
@@ -95,12 +152,16 @@ Alle Namen & Aliase sind in `config.yml → commands` änderbar (leere Liste = B
 `bungeesystem.chat.bypass` (Spam/Caps), `bungeesystem.chat.filter.bypass`, `bungeesystem.chat.color`,
 `bungeesystem.chat.globalmute.bypass`, `bungeesystem.chat.clear.bypass`, `bungeesystem.cmdblock.bypass`,
 `bungeesystem.msg.spy`, `bungeesystem.msg.bypass`, `bungeesystem.friends.premium`, `bungeesystem.party.premium`,
-`bungeesystem.clan.free`, `bungeesystem.friends.jump.bypass`.
+`bungeesystem.clan.free`, `bungeesystem.friends.jump.bypass`, `bungeesystem.history.clear`, `bungeesystem.chat.filter.manage`,
+`bungeesystem.joinme.bypass`, `bungeesystem.server.<name>` (Server-Befehle).
+
+> **Nicht enthalten:** NickModule – dafür müsste das Addon auf jedem Server das Spielerprofil (Name & Skin) umschreiben.
+> Das TS-Verify setzt Gruppe & Beschreibung, aber kein Kopf-Icon (dafür bräuchte es den TS-Dateitransfer).
 
 ## Technik
 
 - Kanal **`crafterteam:bungee`** (Plugin-Messaging) zwischen Proxy und Servern:
-  `HELLO`, `ONLINETIME`, `CLANTAG`, `FRIEND_REFRESH`, `FRIEND_SETTINGS`, `COINS_TAKE`/`COINS_RESULT`, `GUI`, `RUN`, `ADDON`.
+  `HELLO`, `ONLINETIME`, `CLANTAG`, `FRIEND_REFRESH`, `FRIEND_SETTINGS`, `COINS_TAKE`/`COINS_ADD`/`COINS_GET`/`COINS_RESULT`/`COINS_VALUE`, `SPAWN`, `GUI`, `RUN`, `ADDON`.
   Nachrichten von Clients auf diesem Kanal werden verworfen; Server dürfen nur BungeeSystem-Befehle im Namen
   des Spielers ausführen, über dessen Verbindung die Nachricht kam (Permissions werden normal geprüft).
 - Coins für Clans: Der Proxy fragt zuerst den Server des Spielers (LobbySystem/MissileWars halten das Guthaben im Cache),
