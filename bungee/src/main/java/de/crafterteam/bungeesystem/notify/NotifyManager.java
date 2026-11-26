@@ -36,6 +36,7 @@ public final class NotifyManager {
             if (receives(p, type)) Messages.sendRaw(p, text);
         }
         plugin.getLogger().info("[Notify/" + type + "] " + Text.strip(text.replace("\n", " ")));
+        if (plugin.discord() != null) plugin.discord().onNotify(type, Text.strip(text).replace("\u200b", ""));
     }
 
     public void toggle(ProxiedPlayer p, String type) {

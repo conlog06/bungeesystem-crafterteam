@@ -84,7 +84,7 @@ public final class ChatModule implements Listener {
             Messages.sendRaw(p, plugin.punish().muteMessage(mute));
             return;
         }
-        if (!cfg().getBoolean("enabled", true)) return;
+        if (!cfg().getBoolean("enabled", true) || !plugin.moduleActive("chat")) return;
         String server = p.getServer() == null ? "" : p.getServer().getInfo().getName();
         if ((globalMute || mutedServers.contains(server.toLowerCase())) && !p.hasPermission("bungeesystem.chat.globalmute.bypass")) {
             e.setCancelled(true);
@@ -314,7 +314,7 @@ public final class ChatModule implements Listener {
             return;
         }
         Configuration cb = plugin.config().getSection("cmdblock");
-        if (!cb.getBoolean("enabled", true) || p.hasPermission("bungeesystem.cmdblock.bypass")) return;
+        if (!cb.getBoolean("enabled", true) || !plugin.moduleActive("cmdblock") || p.hasPermission("bungeesystem.cmdblock.bypass")) return;
         if (plugin.isOwnCommand(label)) return;
         boolean block = cb.getBoolean("block-namespaced", true) && label.contains(":");
         if (!block) {
@@ -415,23 +415,86 @@ public final class ChatModule implements Listener {
         }
     }
 
+    /**
+     * /chat – ohne Argument: Chat für sich selbst an/aus. Unterbefehle: globalmute, clear [Spieler], filter list|add|remove.
+     */
     static final class ToggleCmd extends Cmd {
         ToggleCmd(BungeeSystem plugin, String[] names) {
-            super(plugin, names, "bungeesystem.chat.toggle");
+            super(plugin, names, null);
         }
 
         @Override
         protected void run(CommandSender s, String[] args) {
-            ProxiedPlayer p = player(s);
-            if (p == null) return;
-            PlayerManager.Session session = plugin.players().session(p);
-            session.chatOff = !session.chatOff;
-            plugin.players().saveSettings(session);
-            m().send(p, session.chatOff ? "chat.toggle-off" : "chat.toggle-on");
+            String sub = args.length > 0 ? args[0].toLowerCase(Locale.ROOT) : "toggle";
+            switch (sub) {
+                case "globalmute" -> {
+                    if (!s.hasPermission("bungeesystem.chat.globalmute")) {
+                        m().send(s, "general.no-permission");
+                        return;
+                    }
+                    ProxyServer.getInstance().getPluginManager().dispatchCommand(s, plugin.commandName("globalmute") + (args.length > 1 ? " " + args[1] : ""));
+                }
+                case "clear" -> {
+                    if (!s.hasPermission("bungeesystem.chat.clear")) {
+                        m().send(s, "general.no-permission");
+                        return;
+                    }
+                    if (args.length > 1) {
+                        ProxiedPlayer t = ProxyServer.getInstance().getPlayer(args[1]);
+                        if (t == null) {
+                            ProxyServer.getInstance().getPluginManager().dispatchCommand(s, plugin.commandName("chatclear") + " " + args[1]);
+                            return;
+                        }
+                        BaseComponent[] empty = TextComponent.fromLegacyText(" ");
+                        for (int i = 0; i < plugin.config().getInt("chat.clear-lines", 120); i++) t.sendMessage(ChatMessageType.SYSTEM, empty);
+                        m().send(t, "chat.cleared", "staff", name(s));
+                        m().send(s, "chat.cleared-player", "player", t.getName());
+                        return;
+                    }
+                    ProxyServer.getInstance().getPluginManager().dispatchCommand(s, plugin.commandName("chatclear"));
+                }
+                case "filter" -> {
+                    if (!s.hasPermission("bungeesystem.chat.filter.manage")) {
+                        m().send(s, "general.no-permission");
+                        return;
+                    }
+                    List<String> words = new ArrayList<>(plugin.config().getStringList("chat.filter.words"));
+                    String action = args.length > 1 ? args[1].toLowerCase(Locale.ROOT) : "list";
+                    if ((action.equals("add") || action.equals("remove")) && args.length > 2) {
+                        String word = join(args, 2).toLowerCase(Locale.ROOT);
+                        boolean changed = action.equals("add") ? !words.contains(word) && words.add(word) : words.remove(word);
+                        if (changed) {
+                            plugin.config().set("chat.filter.words", words);
+                            plugin.configFile().save();
+                        }
+                        m().send(s, action.equals("add") ? (changed ? "chat.filter-added" : "chat.filter-exists") : (changed ? "chat.filter-removed" : "chat.filter-missing"),
+                                "word", word);
+                        return;
+                    }
+                    m().send(s, "chat.filter-list", "count", Integer.toString(words.size()), "words", words.isEmpty() ? "-" : String.join(", ", words));
+                }
+                default -> {
+                    ProxiedPlayer p = player(s);
+                    if (p == null) return;
+                    if (!p.hasPermission("bungeesystem.chat.toggle")) {
+                        m().send(p, "general.no-permission");
+                        return;
+                    }
+                    PlayerManager.Session session = plugin.players().session(p);
+                    session.chatOff = !session.chatOff;
+                    plugin.players().saveSettings(session);
+                    m().send(p, session.chatOff ? "chat.toggle-off" : "chat.toggle-on");
+                }
+            }
         }
 
         @Override
         protected List<String> complete(CommandSender s, String[] args) {
+            if (args.length == 1) return filter(args[0], "toggle", "globalmute", "clear", "filter");
+            if (args.length == 2 && args[0].equalsIgnoreCase("filter")) return filter(args[1], "list", "add", "remove");
+            if (args.length == 2 && args[0].equalsIgnoreCase("clear")) return players(args[1]);
+            if (args.length == 3 && args[0].equalsIgnoreCase("filter") && args[1].equalsIgnoreCase("remove"))
+                return filter(args[2], plugin.config().getStringList("chat.filter.words"));
             return List.of();
         }
     }

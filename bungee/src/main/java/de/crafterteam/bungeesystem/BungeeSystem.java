@@ -9,6 +9,15 @@ import de.crafterteam.bungeesystem.core.Database;
 import de.crafterteam.bungeesystem.core.Messages;
 import de.crafterteam.bungeesystem.core.PlayerManager;
 import de.crafterteam.bungeesystem.core.YamlFile;
+import de.crafterteam.bungeesystem.core.Settings;
+import de.crafterteam.bungeesystem.community.CommunityTools;
+import de.crafterteam.bungeesystem.community.PollModule;
+import de.crafterteam.bungeesystem.external.DiscordModule;
+import de.crafterteam.bungeesystem.external.TeamSpeakModule;
+import de.crafterteam.bungeesystem.network.NetworkModule;
+import de.crafterteam.bungeesystem.team.SupportModule;
+import de.crafterteam.bungeesystem.team.TeamTools;
+import de.crafterteam.bungeesystem.team.WarnModule;
 import de.crafterteam.bungeesystem.notify.NotifyManager;
 import de.crafterteam.bungeesystem.onlinetime.OnlineTimeCommands;
 import de.crafterteam.bungeesystem.punish.PunishCommands;
@@ -69,6 +78,32 @@ public final class BungeeSystem extends Plugin {
         DEFAULT_COMMANDS.put("globalmute", List.of("globalmute", "gmute"));
         DEFAULT_COMMANDS.put("chatclear", List.of("chatclear", "cc-all", "clearchat"));
         DEFAULT_COMMANDS.put("chat", List.of("chat", "togglechat"));
+        DEFAULT_COMMANDS.put("teamchat", List.of("teamchat", "tc"));
+        DEFAULT_COMMANDS.put("adminchat", List.of("adminchat", "ac"));
+        DEFAULT_COMMANDS.put("teamonline", List.of("teamonline", "teaminfo"));
+        DEFAULT_COMMANDS.put("jointo", List.of("jointo", "goto"));
+        DEFAULT_COMMANDS.put("whereis", List.of("whereis", "find"));
+        DEFAULT_COMMANDS.put("staffstats", List.of("staff", "staffstats"));
+        DEFAULT_COMMANDS.put("warn", List.of("warn", "warns"));
+        DEFAULT_COMMANDS.put("exemption", List.of("exemption", "ea"));
+        DEFAULT_COMMANDS.put("support", List.of("support"));
+        DEFAULT_COMMANDS.put("bugreport", List.of("bugreport", "bug"));
+        DEFAULT_COMMANDS.put("maintenance", List.of("maintenance", "wartung"));
+        DEFAULT_COMMANDS.put("motd", List.of("motd"));
+        DEFAULT_COMMANDS.put("hub", List.of("hub", "lobby", "l"));
+        DEFAULT_COMMANDS.put("broadcast", List.of("broadcast", "bc"));
+        DEFAULT_COMMANDS.put("help", List.of("help", "hilfe"));
+        DEFAULT_COMMANDS.put("ping", List.of("ping"));
+        DEFAULT_COMMANDS.put("online", List.of("online"));
+        DEFAULT_COMMANDS.put("whereami", List.of("whereami"));
+        DEFAULT_COMMANDS.put("debugreset", List.of("debugreset"));
+        DEFAULT_COMMANDS.put("poll", List.of("poll", "umfrage"));
+        DEFAULT_COMMANDS.put("joinme", List.of("joinme"));
+        DEFAULT_COMMANDS.put("advert", List.of("advert", "geworben"));
+        DEFAULT_COMMANDS.put("coins", List.of("coins"));
+        DEFAULT_COMMANDS.put("rankinfo", List.of("rankinfo"));
+        DEFAULT_COMMANDS.put("tsbot", List.of("tsbot"));
+        DEFAULT_COMMANDS.put("tsverify", List.of("tsverify"));
         DEFAULT_COMMANDS.put("admin", List.of("bungeesystem", "bsys"));
     }
 
@@ -85,7 +120,17 @@ public final class BungeeSystem extends Plugin {
     private PartyManager parties;
     private ClanManager clans;
     private ChatModule chat;
+    private Settings settings;
+    private SupportModule support;
+    private NetworkModule network;
+    private PollModule poll;
+    private DiscordModule discord;
+    private TeamSpeakModule teamspeak;
     private final Map<String, String> commandNames = new ConcurrentHashMap<>();
+    /** Module, die beim Start geladen wurden bzw. per /bungeesystem modules disable kurz aus sind. */
+    private final Set<String> loadedModules = ConcurrentHashMap.newKeySet();
+    private final Set<String> pausedModules = ConcurrentHashMap.newKeySet();
+    private volatile String currentModule;
     private final Set<String> ownCommands = ConcurrentHashMap.newKeySet();
 
     @Override
@@ -115,38 +160,87 @@ public final class BungeeSystem extends Plugin {
         pm.registerListener(this, bridge);
         pm.registerListener(this, new ConnectionListener(this));
 
-        if (module("punish")) {
-            punish = new PunishManager(this);
+        settings = new Settings(this);
+        settings.load();
+
+        punish = new PunishManager(this); // auch ohne Modul für Mute-Prüfungen im Chat (dann leer)
+        load("punish", () -> {
             punish.loadReasons();
             punish.reload().join();
             PunishCommands.register(this);
             getLogger().info("Ban-/Mute-Modul: " + punish.allReasons().size() + " Vorlagen.");
-        } else {
-            punish = new PunishManager(this); // für Mute-Prüfungen im Chat (leer)
-        }
-        if (module("report")) {
+        });
+        load("report", () -> {
             reports = new ReportManager(this);
             ReportManager.register(this);
-        }
-        command("notify", n -> new NotifyCmd(this, n));
-        if (module("friends")) {
+        });
+        load("notify", () -> command("notify", n -> new NotifyCmd(this, n)));
+        load("friends", () -> {
             friends = new FriendManager(this);
             FriendManager.register(this);
-        }
-        if (module("party")) {
+        });
+        load("party", () -> {
             parties = new PartyManager(this);
             PartyManager.register(this);
-        }
-        if (module("clan")) {
+        });
+        load("clan", () -> {
             clans = new ClanManager(this);
             ClanManager.register(this);
-        }
-        if (module("onlinetime")) OnlineTimeCommands.register(this);
+        });
+        load("onlinetime", () -> OnlineTimeCommands.register(this));
         if (module("chat") || module("cmdblock")) {
             chat = new ChatModule(this);
             pm.registerListener(this, chat);
-            if (module("chat")) ChatModule.register(this);
+            load("chat", () -> ChatModule.register(this));
         }
+        // ---- Team-Tools
+        load("teamchat", () -> TeamTools.registerTeamChat(this));
+        load("adminchat", () -> TeamTools.registerAdminChat(this));
+        load("teamonline", () -> TeamTools.registerTeamOnline(this));
+        load("jointo", () -> TeamTools.registerJoinTo(this));
+        load("whereis", () -> TeamTools.registerWhereIs(this));
+        load("staffstats", () -> TeamTools.registerStaffStats(this));
+        load("warn", () -> WarnModule.registerWarn(this));
+        load("exemption", () -> WarnModule.registerExemption(this));
+        load("support", () -> {
+            support = new SupportModule(this);
+            support.registerSupport();
+        });
+        load("bugreport", () -> SupportModule.registerBugReport(this));
+        // ---- Netzwerk
+        network = new NetworkModule(this);
+        pm.registerListener(this, network);
+        load("maintenance", network::registerMaintenance);
+        load("motd", network::registerMotd);
+        load("hub", network::registerHub);
+        load("servers", network::registerServers);
+        load("broadcast", network::registerBroadcast);
+        load("autobroadcast", network::startAutoBroadcast);
+        load("help", network::registerHelp);
+        load("links", network::registerLinks);
+        load("ping", network::registerPing);
+        load("online", network::registerOnline);
+        load("whereami", network::registerWhereAmI);
+        load("debug", network::registerDebug);
+        // ---- Community
+        load("poll", () -> {
+            poll = new PollModule(this);
+            poll.register();
+        });
+        load("joinme", () -> CommunityTools.registerJoinMe(this));
+        load("advert", () -> CommunityTools.registerAdvert(this));
+        load("coins", () -> CommunityTools.registerCoins(this));
+        load("rankinfo", () -> CommunityTools.registerRankInfo(this));
+        // ---- Extern
+        load("discord", () -> {
+            discord = new DiscordModule(this);
+            discord.start();
+        });
+        load("teamspeak", () -> {
+            teamspeak = new TeamSpeakModule(this);
+            teamspeak.start();
+        });
+        currentModule = null;
         command("admin", n -> new AdminCmd(this, n));
         bridge.allow(ownCommands);
 
@@ -162,7 +256,8 @@ public final class BungeeSystem extends Plugin {
     private void startTasks() {
         var s = getProxy().getScheduler();
         s.schedule(this, () -> {
-            if (punish != null) punish.reload();
+            if (punish != null && loadedModules.contains("punish")) punish.reload();
+            settings.load();
         }, 60, 60, TimeUnit.SECONDS);
         s.schedule(this, players::flushAll, 5, 5, TimeUnit.MINUTES);
         if (module("onlinetime")) s.schedule(this, () -> OnlineTimeCommands.push(this), 60, 60, TimeUnit.SECONDS);
@@ -195,6 +290,8 @@ public final class BungeeSystem extends Plugin {
 
     @Override
     public void onDisable() {
+        if (teamspeak != null) teamspeak.stop();
+        if (discord != null) discord.stop();
         if (players != null) {
             players.flushAll();
         }
@@ -207,6 +304,44 @@ public final class BungeeSystem extends Plugin {
         if (punish != null) punish.loadReasons();
     }
 
+    // ---------------------------------------------------------------- Module
+
+    /** Alle Module in Anzeige-Reihenfolge. */
+    public static final List<String> MODULES = List.of("punish", "report", "notify", "friends", "party", "clan", "onlinetime", "chat", "cmdblock",
+            "teamchat", "adminchat", "teamonline", "jointo", "whereis", "staffstats", "warn", "exemption", "support", "bugreport",
+            "maintenance", "motd", "hub", "servers", "broadcast", "autobroadcast", "help", "links", "ping", "online", "whereami", "debug",
+            "poll", "joinme", "advert", "coins", "rankinfo", "discord", "teamspeak");
+
+    private void load(String module, Runnable init) {
+        if (!module(module)) return;
+        currentModule = module;
+        try {
+            init.run();
+            loadedModules.add(module);
+        } catch (RuntimeException e) {
+            getLogger().log(Level.WARNING, "Modul " + module + " konnte nicht geladen werden", e);
+        } finally {
+            currentModule = null;
+        }
+    }
+
+    public String currentModule() {
+        return currentModule;
+    }
+
+    /** Modul geladen und nicht pausiert. */
+    public boolean moduleActive(String module) {
+        return loadedModules.contains(module) && !pausedModules.contains(module) || module.equals("cmdblock") && module("cmdblock") && !pausedModules.contains(module);
+    }
+
+    public Set<String> loadedModules() {
+        return loadedModules;
+    }
+
+    public Set<String> pausedModules() {
+        return pausedModules;
+    }
+
     // ---------------------------------------------------------------- Befehle
 
     /** Befehl mit Namen aus config.yml → commands.&lt;key&gt; registrieren (leere Liste = deaktiviert). */
@@ -215,6 +350,15 @@ public final class BungeeSystem extends Plugin {
         if (names == null || names.isEmpty()) return;
         String[] arr = names.stream().map(n -> n.toLowerCase(Locale.ROOT).replaceFirst("^/", "")).toArray(String[]::new);
         commandNames.put(key, arr[0]);
+        for (String n : arr) ownCommands.add(n);
+        getProxy().getPluginManager().registerCommand(this, factory.apply(arr));
+    }
+
+    /** Befehl mit fest vorgegebenen Namen (z. B. aus einer Liste in der config) registrieren. */
+    public void command(String key, List<String> names, Function<String[], Cmd> factory) {
+        if (names == null || names.isEmpty()) return;
+        String[] arr = names.stream().map(n -> n.toLowerCase(Locale.ROOT).replaceFirst("^/", "")).toArray(String[]::new);
+        commandNames.putIfAbsent(key, arr[0]);
         for (String n : arr) ownCommands.add(n);
         getProxy().getPluginManager().registerCommand(this, factory.apply(arr));
     }
@@ -233,12 +377,12 @@ public final class BungeeSystem extends Plugin {
     // ---------------------------------------------------------------- Helfer
 
     public boolean module(String name) {
-        return config().getBoolean("modules." + name, true);
+        return config().getBoolean("modules." + name, !name.equals("discord") && !name.equals("teamspeak"));
     }
 
     public String modules() {
         List<String> on = new ArrayList<>();
-        for (String m : List.of("punish", "report", "friends", "party", "clan", "onlinetime", "chat", "cmdblock")) if (module(m)) on.add(m);
+        for (String m : MODULES) if (moduleActive(m)) on.add(m);
         return String.join(",", on);
     }
 
@@ -309,6 +453,34 @@ public final class BungeeSystem extends Plugin {
         return chat;
     }
 
+    public Settings settings() {
+        return settings;
+    }
+
+    public SupportModule support() {
+        return support;
+    }
+
+    public NetworkModule network() {
+        return network;
+    }
+
+    public PollModule poll() {
+        return poll;
+    }
+
+    public DiscordModule discord() {
+        return discord;
+    }
+
+    public TeamSpeakModule teamspeak() {
+        return teamspeak;
+    }
+
+    public YamlFile configFile() {
+        return configFile;
+    }
+
     // ================================================================ /notify & /bungeesystem
 
     static final class NotifyCmd extends Cmd {
@@ -358,13 +530,51 @@ public final class BungeeSystem extends Plugin {
                 m().send(s, "general.reloaded");
                 return;
             }
+            if (args.length > 0 && args[0].equalsIgnoreCase("modules")) {
+                String sub = args.length > 1 ? args[1].toLowerCase(Locale.ROOT) : "list";
+                String mod = args.length > 2 ? args[2].toLowerCase(Locale.ROOT) : null;
+                switch (sub) {
+                    case "enable" -> {
+                        if (mod == null || !plugin.loadedModules.contains(mod)) {
+                            m().send(s, "general.module-not-loaded", "module", String.valueOf(mod));
+                            return;
+                        }
+                        plugin.pausedModules.remove(mod);
+                        m().send(s, "general.module-enabled", "module", mod);
+                    }
+                    case "disable" -> {
+                        if (mod == null || !MODULES.contains(mod)) {
+                            m().send(s, "general.module-not-loaded", "module", String.valueOf(mod));
+                            return;
+                        }
+                        plugin.pausedModules.add(mod);
+                        m().send(s, "general.module-disabled-temp", "module", mod);
+                    }
+                    case "reload" -> {
+                        plugin.reload();
+                        m().send(s, "general.reloaded");
+                    }
+                    default -> {
+                        m().send(s, "general.modules-header", "count", Integer.toString(plugin.loadedModules.size()));
+                        for (String x : MODULES) {
+                            String state = plugin.pausedModules.contains(x) ? "general.module-state-paused"
+                                    : plugin.moduleActive(x) ? "general.module-state-on" : "general.module-state-off";
+                            m().send(s, "general.modules-entry", "module", x, "state", m().raw(state), "cmd", getName());
+                        }
+                    }
+                }
+                return;
+            }
             m().send(s, "general.info", "version", plugin.getDescription().getVersion(), "modules", plugin.modules(),
                     "players", Integer.toString(ProxyServer.getInstance().getOnlineCount()));
         }
 
         @Override
         protected List<String> complete(CommandSender s, String[] args) {
-            return args.length == 1 ? filter(args[0], "reload", "info") : List.of();
+            if (args.length == 1) return filter(args[0], "reload", "info", "modules");
+            if (args.length == 2 && args[0].equalsIgnoreCase("modules")) return filter(args[1], "list", "enable", "disable", "reload");
+            if (args.length == 3 && args[0].equalsIgnoreCase("modules")) return filter(args[2], MODULES);
+            return List.of();
         }
     }
 }

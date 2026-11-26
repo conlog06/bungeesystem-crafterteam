@@ -318,6 +318,33 @@ public final class PunishManager {
                 "date", Time.date(p.created()));
     }
 
+    /** Aktive Strafe auf ein neues Ende setzen (Exemption/Verkürzung). */
+    public CompletableFuture<Punishment> shorten(UUID uuid, Type type, long newUntil) {
+        Punishment p = type == Type.BAN ? ban(uuid) : mute(uuid);
+        if (p == null) return CompletableFuture.completedFuture(null);
+        Punishment updated = new Punishment(p.id(), p.type(), p.uuid(), p.name(), p.staff(), p.reason(), p.reasonId(), p.created(),
+                newUntil, p.ip(), p.server(), true, null);
+        if (type == Type.BAN) {
+            bans.put(uuid, updated);
+            if (!updated.ip().isBlank()) ipBans.put(updated.ip(), updated);
+        } else {
+            mutes.put(uuid, updated);
+        }
+        String table = type == Type.BAN ? "bs_bans" : "bs_mutes";
+        return plugin.db().submit(con -> {
+            Database.exec(con, "update " + table + " set until_time = ? where id = ?", newUntil, p.id());
+            return updated;
+        });
+    }
+
+    /** Erledigte Einträge (nicht aktive Bans/Mutes, Kicks, Warns) eines Spielers löschen. */
+    public CompletableFuture<Integer> clearHistory(UUID uuid) {
+        return plugin.db().submit(con -> Database.exec(con, "delete from bs_bans where uuid = ? and active = 0", uuid.toString())
+                + Database.exec(con, "delete from bs_mutes where uuid = ? and active = 0", uuid.toString())
+                + Database.exec(con, "delete from bs_kicks where uuid = ?", uuid.toString())
+                + Database.exec(con, "delete from bs_warns where uuid = ?", uuid.toString()));
+    }
+
     public CompletableFuture<Boolean> unban(UUID uuid, String staff) {
         Punishment old = bans.remove(uuid);
         ipBans.values().removeIf(x -> x.uuid().equals(uuid));

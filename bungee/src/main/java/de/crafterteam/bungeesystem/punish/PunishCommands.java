@@ -36,7 +36,7 @@ public final class PunishCommands {
     }
 
     /** Spieler auflösen, sonst "nicht gefunden". */
-    static void resolve(BungeeSystem plugin, CommandSender s, String name, Consumer<Known> then) {
+    public static void resolve(BungeeSystem plugin, CommandSender s, String name, Consumer<Known> then) {
         plugin.players().lookup(name).thenAccept((Optional<Known> k) -> {
             if (k.isEmpty()) plugin.messages().send(s, "general.player-not-found", "player", name);
             else then.accept(k.get());
@@ -285,6 +285,15 @@ public final class PunishCommands {
         protected void run(CommandSender s, String[] args) {
             if (args.length == 0) {
                 m().send(s, "history.usage", "cmd", getName());
+                return;
+            }
+            if (args.length > 1 && args[1].equalsIgnoreCase("clear")) {
+                if (!s.hasPermission("bungeesystem.history.clear")) {
+                    m().send(s, "general.no-permission");
+                    return;
+                }
+                resolve(plugin, s, args[0], t -> plugin.punish().clearHistory(t.uuid()).thenAccept(n ->
+                        m().send(s, "history.cleared", "player", t.name(), "count", Integer.toString(n))));
                 return;
             }
             resolve(plugin, s, args[0], t -> plugin.punish().history(t.uuid(), Type.BAN)
