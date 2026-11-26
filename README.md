@@ -4,7 +4,7 @@ Netzwerk-System für **BungeeCord** (1.21 – 26.x, Java 21): Ban/Mute/Report, F
 Arbeitet mit derselben MySQL-Datenbank wie das [LobbySystem](https://github.com/conlog06/lobbysystem-claude) und
 [MissileWars](https://github.com/conlog06/missile-wars).
 
-**Download:** [Releases → latest](https://github.com/conlog06/bungeesystem-crafterteam/releases/tag/latest)
+**Download:** [Releases → latest](https://github.com/conlog06/bungeesystem-crafterteam/releases/tag/latest) (wird bei jedem Push auf `main` gebaut)
 
 | Datei | Wohin |
 |---|---|
