@@ -96,9 +96,15 @@ public final class Bridge implements Listener {
 
     public void hello(ProxiedPlayer p) {
         String modules = plugin.modules();
+        StringBuilder cmds = new StringBuilder();
+        for (String key : new String[]{"friend", "party", "clan", "report", "onlinetime"}) {
+            cmds.append(cmds.isEmpty() ? "" : ";").append(key).append('=').append(plugin.commandName(key));
+        }
+        String commands = cmds.toString();
         send(p, "HELLO", out -> {
             out.writeInt(VERSION);
             out.writeUTF(modules);
+            out.writeUTF(commands);
         });
     }
 
