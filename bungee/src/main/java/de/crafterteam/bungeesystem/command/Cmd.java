@@ -21,7 +21,8 @@ public abstract class Cmd extends Command implements TabExecutor {
     private final String perm;
 
     protected Cmd(BungeeSystem plugin, String[] names, String permission) {
-        super(names[0], null, Arrays.copyOfRange(names, 1, names.length));
+        // Permission an BungeeCord geben → Befehl taucht ohne Recht nicht in der Tab-Vervollständigung auf
+        super(names[0], permission, Arrays.copyOfRange(names, 1, names.length));
         this.plugin = plugin;
         this.perm = permission;
     }
