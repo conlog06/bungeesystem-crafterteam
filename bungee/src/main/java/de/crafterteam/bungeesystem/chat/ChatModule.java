@@ -204,6 +204,8 @@ public final class ChatModule implements Listener {
     // ================================================================ Format
 
     private boolean formats(String server) {
+        // LobbySystem (Rang-Badges) & MissileWars (Teamchat) formatieren selbst
+        if (plugin.bridge().ownChat(server)) return false;
         Configuration f = cfg().getSection("format");
         return f.getBoolean("enabled", true) && !plugin.matches(server, f.getStringList("ignored-servers"));
     }
@@ -250,7 +252,7 @@ public final class ChatModule implements Listener {
     }
 
     private void pingMentions(ProxiedPlayer sender, String message, ServerInfo server) {
-        if (!cfg().getBoolean("mentions.enabled", true) || server == null) return;
+        if (!cfg().getBoolean("mentions.enabled", true) || server == null || plugin.bridge().ownChat(server.getName())) return;
         for (ProxiedPlayer to : server.getPlayers()) {
             if (to != sender && containsName(message, to.getName())) m().actionbar(to, "chat.mention-actionbar", "player", sender.getName());
         }

@@ -55,6 +55,46 @@ public final class Bridge implements Listener {
         for (String c : commands) allowed.add(c.toLowerCase());
     }
 
+    /** Was ein Spielserver über sich meldet (Antwort auf HELLO). */
+    public record ServerReport(String plugin, String version, boolean ownChat, String storage, String database, long time) {
+    }
+
+    private final Map<String, ServerReport> reports = new ConcurrentHashMap<>();
+    private final Set<String> warned = ConcurrentHashMap.newKeySet();
+
+    public Map<String, ServerReport> reports() {
+        return reports;
+    }
+
+    /** Server formatiert den Chat selbst (LobbySystem mit Rang-Badges, MissileWars-Teamchat). */
+    public boolean ownChat(String server) {
+        ServerReport r = server == null ? null : reports.get(server);
+        return r != null && r.ownChat();
+    }
+
+    /** Prüft, ob der Server dieselbe Datenbank nutzt – sonst Warnung (Coins/Freunde/Clans wären getrennt). */
+    private void checkDatabase(String server, ServerReport r, ProxiedPlayer via) {
+        String mine = plugin.databaseId();
+        boolean ok = "mysql".equalsIgnoreCase(r.storage()) && (r.database().isBlank() || sameDb(mine, r.database()));
+        if (ok) {
+            warned.remove(server);
+            return;
+        }
+        if (!warned.add(server)) return;
+        String reason = "mysql".equalsIgnoreCase(r.storage()) ? "andere Datenbank (" + r.database() + " statt " + mine + ")" : "keine MySQL (" + r.storage() + ")";
+        plugin.getLogger().warning("ACHTUNG: " + r.plugin() + " auf " + server + " nutzt " + reason
+                + " – Coins, Freunde, Party & Clans sind dort NICHT mit dem Proxy geteilt!");
+        for (ProxiedPlayer p : ProxyServer.getInstance().getPlayers()) {
+            if (p.hasPermission("bungeesystem.admin")) plugin.messages().send(p, "general.db-warning", "plugin", r.plugin(), "server", server, "reason", reason);
+        }
+    }
+
+    /** Hostnamen wie localhost/127.0.0.1 gelten als gleich, verglichen wird v. a. der Datenbankname. */
+    static boolean sameDb(String a, String b) {
+        String da = a.substring(a.lastIndexOf('/') + 1).toLowerCase(), db = b.substring(b.lastIndexOf('/') + 1).toLowerCase();
+        return da.equals(db);
+    }
+
     public boolean hasAddon(ProxiedPlayer p) {
         return p.getServer() != null && addonServers.contains(p.getServer().getInfo().getName());
     }
@@ -102,10 +142,12 @@ public final class Bridge implements Listener {
             cmds.append(cmds.isEmpty() ? "" : ";").append(key).append('=').append(plugin.commandName(key));
         }
         String commands = cmds.toString();
+        String server = p.getServer() == null ? "" : p.getServer().getInfo().getName();
         send(p, "HELLO", out -> {
             out.writeInt(VERSION);
             out.writeUTF(modules);
             out.writeUTF(commands);
+            out.writeUTF(server); // echter Servername aus der Proxy-Config
         });
     }
 
@@ -223,6 +265,12 @@ public final class Bridge implements Listener {
             String type = in.readUTF();
             switch (type) {
                 case "ADDON" -> addonServers.add(server.getInfo().getName());
+                case "SERVER_INFO" -> {
+                    String name = server.getInfo().getName();
+                    ServerReport r = new ServerReport(in.readUTF(), in.readUTF(), in.readBoolean(), in.readUTF(), in.readUTF(), System.currentTimeMillis());
+                    reports.put(name, r);
+                    checkDatabase(name, r, player);
+                }
                 case "RUN" -> {
                     UUID uuid = UUID.fromString(in.readUTF());
                     String line = in.readUTF().trim();

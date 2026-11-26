@@ -370,6 +370,12 @@ public final class BungeeSystem extends Plugin {
         return d == null ? key : d.get(0);
     }
 
+    /** "host:port/datenbank" der eigenen MySQL-Verbindung (für den Abgleich mit den Spielservern). */
+    public String databaseId() {
+        Configuration m = config().getSection("mysql");
+        return m.getString("host", "localhost") + ":" + m.getInt("port", 3306) + "/" + m.getString("database", "lobby");
+    }
+
     public boolean isOwnCommand(String label) {
         return ownCommands.contains(label.toLowerCase(Locale.ROOT));
     }
@@ -530,6 +536,24 @@ public final class BungeeSystem extends Plugin {
                 m().send(s, "general.reloaded");
                 return;
             }
+            if (args.length > 0 && args[0].equalsIgnoreCase("debug")) {
+                m().send(s, "general.debug-header", "db", plugin.databaseId());
+                for (ServerInfo info : ProxyServer.getInstance().getServers().values()) {
+                    Bridge.ServerReport r = plugin.bridge.reports().get(info.getName());
+                    if (r == null && info.getPlayers().isEmpty()) continue;
+                    m().send(s, "general.debug-server", "server", info.getName(), "players", Integer.toString(info.getPlayers().size()),
+                            "plugin", r == null ? "-" : r.plugin() + " " + r.version(), "storage", r == null ? "-" : r.storage() + " " + r.database(),
+                            "chat", r == null ? "Proxy" : r.ownChat() ? "eigenes Format" : "Proxy");
+                }
+                ProxiedPlayer target = args.length > 1 ? ProxyServer.getInstance().getPlayer(args[1]) : s instanceof ProxiedPlayer p ? p : null;
+                if (target != null) {
+                    plugin.db().submit(con -> Database.longValue(con, "select coins from ls_players where uuid = ?", -1, target.getUniqueId().toString()))
+                            .thenCombine(plugin.bridge.coins(target.getUniqueId()), (dbCoins, live) ->
+                                    m().raw("general.debug-coins", "player", target.getName(), "db", Long.toString(dbCoins), "live", Long.toString(live)))
+                            .thenAccept(t -> Messages.sendRaw(s, t));
+                }
+                return;
+            }
             if (args.length > 0 && args[0].equalsIgnoreCase("modules")) {
                 String sub = args.length > 1 ? args[1].toLowerCase(Locale.ROOT) : "list";
                 String mod = args.length > 2 ? args[2].toLowerCase(Locale.ROOT) : null;
@@ -571,7 +595,7 @@ public final class BungeeSystem extends Plugin {
 
         @Override
         protected List<String> complete(CommandSender s, String[] args) {
-            if (args.length == 1) return filter(args[0], "reload", "info", "modules");
+            if (args.length == 1) return filter(args[0], "reload", "info", "modules", "debug");
             if (args.length == 2 && args[0].equalsIgnoreCase("modules")) return filter(args[1], "list", "enable", "disable", "reload");
             if (args.length == 3 && args[0].equalsIgnoreCase("modules")) return filter(args[2], MODULES);
             return List.of();
