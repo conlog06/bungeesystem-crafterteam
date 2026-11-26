@@ -1,0 +1,9 @@
+# BungeeSystem-Addon – auf jeden Paper-Server legen, auf dem die GUIs (/reports, /punish) gehen sollen.
+# Alle Texte der GUIs kommen vom Proxy (BungeeSystem/messages.yml → gui).
+
+# Clantag hinter dem Namen in der Tab-Liste
+clantag-in-tab:
+  enabled: true
+  format: '&f{name} &8[&e{tag}&8]'
+  # Diese Plugins setzen die Tab-Liste selbst (inkl. Clantag) – dann macht das Addon nichts
+  skip-if-plugins: [LobbySystem, MissileWars]
