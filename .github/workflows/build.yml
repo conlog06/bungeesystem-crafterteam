@@ -1,0 +1,55 @@
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Kompilieren
+        run: |
+          set -o pipefail
+          mvn -B -ntp package 2>&1 | tee build.log
+
+      - name: Fehler anzeigen
+        if: failure()
+        run: |
+          grep -E "\[ERROR\]|error:" build.log | head -60 | while IFS= read -r line; do
+            echo "::error::${line//$'\n'/ }"
+          done
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: BungeeSystem
+          path: |
+            bungee/target/BungeeSystem-*.jar
+            addon/target/BungeeSystemAddon-*.jar
+
+      - name: Release "latest" aktualisieren
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: BungeeSystem (neuester Build)
+          body: |
+            Automatischer Build von `${{ github.sha }}`.
+            - **BungeeSystem-*.jar** → `plugins/` des BungeeCord-Proxys
+            - **BungeeSystemAddon-*.jar** → `plugins/` jedes Paper-Servers (GUIs & Clantag in Tab)
+          files: |
+            bungee/target/BungeeSystem-*.jar
+            addon/target/BungeeSystemAddon-*.jar
+          make_latest: true
+          prerelease: false

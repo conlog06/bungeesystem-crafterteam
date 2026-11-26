@@ -1,0 +1,172 @@
+# ═══════════════════════════════════════════════════════════════════
+#  BungeeSystem – Ban/Mute/Report · Freunde/Party/Clan · Onlinezeit · Chat
+#  Alle Texte stehen in der messages.yml.
+# ═══════════════════════════════════════════════════════════════════
+
+# Dieselbe Datenbank wie LobbySystem & MissileWars (sonst keine gemeinsamen Freunde/Clans/Coins).
+mysql:
+  host: localhost
+  port: 3306
+  database: lobby
+  user: root
+  password: ''
+  pool-size: 3
+  properties: useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=utf8&serverTimezone=UTC
+
+# Module an/aus (nach Änderung Proxy neu starten)
+modules:
+  punish: true
+  report: true
+  friends: true
+  party: true
+  clan: true
+  onlinetime: true
+  chat: true
+  cmdblock: true
+
+# Spielerzahlen aller Server mit Spielern in ls_servers schreiben (Freunde-Status in der Lobby)
+sync-server-status: true
+
+# Befehlsnamen & Aliase – erster Eintrag = Hauptname, leere Liste [] = Befehl aus.
+commands:
+  ban: [ban, tempban, tban]
+  mute: [mute, tempmute]
+  unban: [unban, pardon]
+  unmute: [unmute]
+  kick: [kick]
+  check: [check, baninfo]
+  history: [history, strafen]
+  punish: [punish, bansystem, bs]
+  banreasons: [banreasons, gründe]
+  report: [report, melden]
+  reports: [reports]
+  notify: [notify]
+  friend: [friend, f, freunde, friends]
+  msg: [msg, tell, w, whisper]
+  reply: [r, reply]
+  party: [party, p]
+  partychat: [pc, partychat]
+  clan: [clan, clans]
+  clanchat: [cc, clanchat]
+  onlinetime: [onlinetime, onlinezeit, ot]
+  globalmute: [globalmute, gmute]
+  chatclear: [chatclear, clearchat]
+  chat: [chat, togglechat]
+  admin: [bungeesystem, bsys]
+
+# ─── Ban / Mute ─────────────────────────────────────────────────────
+punish:
+  # Bei einem Ban wird auch die IP gesperrt → kein Umgehen mit Zweitaccount
+  ip-ban: true
+  # Ban/Mute zusätzlich allen Spielern anzeigen (sonst nur dem Team über /notify)
+  broadcast: false
+  # Gleiche Vorlage erneut → Dauer verdoppelt sich, ab N Bans permanent
+  escalation:
+    enabled: true
+    permanent-after: 4
+  # Dauer für eigene Mute-Gründe ohne Zeitangabe
+  custom-mute-duration: 1d
+  # Diese Server-Befehle sind während eines Mutes gesperrt
+  mute-blocked-commands: [me, say, tell, msg, w, whisper, r, reply, mail, minecraft:me, minecraft:say]
+  # Vorlagen: /ban <Spieler> <ID>   |   duration: 30m, 12h, 7d, 2w, 1mo, perm
+  # Eigene Gründe (/ban <Spieler> <Dauer> <Grund>) nur mit bungeesystem.ban.custom bzw. bungeesystem.mute.custom
+  reasons:
+    '1': { name: Hacking, type: BAN, duration: 30d, item: DIAMOND_SWORD }
+    '2': { name: Unerlaubte Clientmodifikation, type: BAN, duration: 14d, item: COMMAND_BLOCK }
+    '3': { name: Bugusing, type: BAN, duration: 7d, item: SPIDER_EYE }
+    '4': { name: Teaming, type: BAN, duration: 3d, item: LEAD }
+    '5': { name: Werbung, type: BAN, duration: 14d, item: OAK_SIGN }
+    '6': { name: Unangemessener Skin/Name, type: BAN, duration: 7d, item: PLAYER_HEAD }
+    '7': { name: Bannumgehung, type: BAN, duration: perm, item: TNT }
+    '8': { name: Beleidigung, type: MUTE, duration: 1d, item: PAPER }
+    '9': { name: Spam, type: MUTE, duration: 6h, item: WRITABLE_BOOK }
+    '10': { name: Provokation, type: MUTE, duration: 12h, item: BLAZE_POWDER }
+    '11': { name: Rassismus / Extremismus, type: MUTE, duration: 30d, item: BARRIER }
+    '99': { name: Permanent (Admin), type: BAN, duration: perm, permission: bungeesystem.ban.permanent, item: BEDROCK }
+
+# ─── Report ─────────────────────────────────────────────────────────
+report:
+  cooldown-seconds: 60
+  only-online: true
+  # true = Spieler dürfen auch eigene Gründe schreiben
+  custom-reasons: false
+  reasons: [Hacking, Beleidigung, Spam, Werbung, Teaming, Bugusing, Skin, Name, Sonstiges]
+
+# ─── Freunde / Privatnachrichten ────────────────────────────────────
+friends:
+  max: 50
+  max-premium: 200          # mit bungeesystem.friends.premium
+  no-jump-servers: []       # z. B. ["Event*"] – dort kann man nicht nachspringen
+private-messages:
+  enabled: true
+  only-friends: false       # true = /msg nur an Freunde
+
+# ─── Party ──────────────────────────────────────────────────────────
+party:
+  max: 8
+  max-premium: 16           # mit bungeesystem.party.premium
+  invite-seconds: 60
+  follow: true              # Mitglieder folgen dem Leader auf jeden Server
+  follow-ignore: []         # Server, auf die nicht mitgenommen wird, z. B. ["Build*"]
+
+# ─── Clan ───────────────────────────────────────────────────────────
+clan:
+  cost: 5000                # Coins (LobbySystem-Guthaben), bungeesystem.clan.free = kostenlos
+  name-max: 16
+  tag-min: 2
+  tag-max: 5
+  max-members: 30
+  invite-seconds: 300
+  blocked-names: [admin, owner, team, support]
+
+# ─── Chat ───────────────────────────────────────────────────────────
+chat:
+  enabled: true
+  clear-lines: 120
+  anti-spam:
+    enabled: true
+    cooldown-ms: 1500
+    # Nachrichten, die einer der letzten zu X % ähneln, werden blockiert (0 = aus)
+    similarity: 85
+    compare-last: 3
+    min-length: 4
+  caps:
+    enabled: true
+    min-length: 6
+    max-percent: 70
+  filter:
+    enabled: true
+    block-ips: true
+    block-domains: true
+    domain-whitelist: [crafterteam.de, youtube.com, discord.gg/crafterteam]
+    # BLOCK = Nachricht sperren, CENSOR = Wort durch *** ersetzen (nur auf Servern mit Proxy-Chatformat)
+    action: BLOCK
+    words: [hurensohn, wichser, nazi, heil hitler, fotze, missgeburt]
+  mentions:
+    enabled: true
+    format: '&e&l@{name}'
+  # Chat-Format auf dem Proxy. Nicht formatierte Server (ignored-servers) behalten ihr eigenes Format
+  # (z. B. Teamchat in MissileWars). Platzhalter: {clan} {prefix} {name} {suffix} {server} {message}
+  format:
+    enabled: true
+    scope: SERVER             # SERVER = nur Spieler auf demselben Server, GLOBAL = alle
+    ignored-servers: ['MissileWars*']
+    format: '{clan}{prefix}{name}{suffix} &8» &7{message}'
+    clan: '&8[&e{tag}&8] '
+    use-luckperms: true       # Prefix/Suffix aus LuckPerms (falls installiert)
+    # Ohne LuckPerms: erste passende Gruppe (Reihenfolge zählt, leere permission = alle)
+    groups:
+      owner: { permission: bungeesystem.chat.group.owner, prefix: '&4Owner &8┃ &4', suffix: '' }
+      admin: { permission: bungeesystem.chat.group.admin, prefix: '&cAdmin &8┃ &c', suffix: '' }
+      mod: { permission: bungeesystem.chat.group.mod, prefix: '&9Mod &8┃ &9', suffix: '' }
+      sup: { permission: bungeesystem.chat.group.sup, prefix: '&bSup &8┃ &b', suffix: '' }
+      premium: { permission: bungeesystem.chat.group.premium, prefix: '&6Premium &8┃ &6', suffix: '' }
+      default: { permission: '', prefix: '&7', suffix: '' }
+
+# ─── CMDBlock ───────────────────────────────────────────────────────
+cmdblock:
+  enabled: true
+  # Befehle mit Namespace (bukkit:..., minecraft:...) immer sperren
+  block-namespaced: true
+  # '*' am Ende = alles, was so beginnt
+  commands: [pl, plugins, ver, version, about, icanhasbukkit, '?', help, bukkit, paper, spigot, timings, me, tps, mspt]

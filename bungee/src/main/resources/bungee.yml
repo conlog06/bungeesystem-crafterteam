@@ -1,0 +1,6 @@
+name: BungeeSystem
+version: '${project.version}'
+main: de.crafterteam.bungeesystem.BungeeSystem
+author: SujucDerBreite
+softDepends: [LuckPerms]
+description: Ban/Mute/Report, Freunde/Party/Clan, Onlinezeit & Chat für BungeeCord

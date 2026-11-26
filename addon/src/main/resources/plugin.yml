@@ -1,0 +1,7 @@
+name: BungeeSystemAddon
+version: '${project.version}'
+main: de.crafterteam.bungeesystem.addon.BungeeSystemAddon
+api-version: '1.21'
+author: SujucDerBreite
+softdepend: [PlaceholderAPI, LobbySystem, MissileWars]
+description: GUIs (Reports, Strafen) & Clantag in der Tab-Liste für das BungeeSystem
