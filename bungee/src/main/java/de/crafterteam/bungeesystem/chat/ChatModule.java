@@ -51,8 +51,32 @@ public final class ChatModule implements Listener {
     private Object luckPerms;
     private boolean luckPermsChecked;
 
+    private final AutoMod autoMod;
+    /** Vorkompilierte Muster (Performance: nicht bei jeder Nachricht neu bauen). */
+    private final Map<String, Pattern> namePatterns = new ConcurrentHashMap<>();
+    private volatile List<String[]> words = List.of();
+    private volatile int wordsHash;
+
     public ChatModule(BungeeSystem plugin) {
         this.plugin = plugin;
+        this.autoMod = new AutoMod(plugin);
+    }
+
+    public AutoMod autoMod() {
+        return autoMod;
+    }
+
+    /** Wortliste normalisiert cachen – wird nur neu gebaut, wenn sich die config ändert. */
+    private List<String[]> words(Configuration f) {
+        List<String> raw = f.getStringList("words");
+        int h = raw.hashCode();
+        if (h != wordsHash) {
+            List<String[]> out = new ArrayList<>();
+            for (String w : raw) if (!w.isBlank()) out.add(new String[]{w, normalize(w.toLowerCase(Locale.ROOT))});
+            words = out;
+            wordsHash = h;
+        }
+        return words;
     }
 
     private Configuration cfg() {
@@ -64,6 +88,7 @@ public final class ChatModule implements Listener {
     }
 
     public void forget(UUID uuid) {
+        autoMod.forget(uuid);
         history.remove(uuid);
         lastMessage.remove(uuid);
     }
@@ -118,6 +143,7 @@ public final class ChatModule implements Listener {
             Long last = lastMessage.get(p.getUniqueId());
             if (last != null && last + cd > now) {
                 m().send(p, "chat.cooldown", "seconds", String.format(Locale.GERMANY, "%.1f", (last + cd - now) / 1000.0));
+                autoMod.strike(p, "spam");
                 return null;
             }
             int similarity = spam.getInt("similarity", 85);
@@ -126,6 +152,7 @@ public final class ChatModule implements Listener {
                 for (String old : h) {
                     if (similarity > 0 && msg.length() >= spam.getInt("min-length", 4) && Text.similarity(old, msg) >= similarity) {
                         m().send(p, "chat.similar", "percent", Integer.toString(similarity));
+                        autoMod.strike(p, "similar");
                         return null;
                     }
                 }
@@ -142,6 +169,7 @@ public final class ChatModule implements Listener {
                 if (canModify) msg = msg.toLowerCase(Locale.ROOT);
                 else {
                     m().send(p, "chat.caps");
+                    autoMod.strike(p, "caps");
                     return null;
                 }
             }
@@ -171,10 +199,10 @@ public final class ChatModule implements Listener {
         }
         boolean censor = "CENSOR".equalsIgnoreCase(f.getString("action", "BLOCK")) && canModify;
         String out = msg;
-        for (String word : f.getStringList("words")) {
-            if (word.isBlank()) continue;
-            String w = word.toLowerCase(Locale.ROOT);
-            if (normalize(lower).contains(normalize(w))) {
+        String normalized = normalize(lower);
+        for (String[] entry : words(f)) {
+            String word = entry[0];
+            if (normalized.contains(entry[1])) {
                 if (!censor) return blocked(p, msg, "Wort: " + word);
                 out = out.replaceAll("(?i)" + Pattern.quote(word), "*".repeat(word.length()));
             }
@@ -190,6 +218,7 @@ public final class ChatModule implements Listener {
 
     private String blocked(ProxiedPlayer p, String msg, String why) {
         m().send(p, "chat.filtered");
+        autoMod.strike(p, "filter");
         plugin.notifier().notify("chat", "chat.filter-notify", "player", p.getName(), "message", msg.replace("[", "(").replace("]", ")"),
                 "reason", why, "server", p.getServer() == null ? "?" : p.getServer().getInfo().getName());
         return null;
@@ -258,8 +287,9 @@ public final class ChatModule implements Listener {
         }
     }
 
-    private static boolean containsName(String text, String name) {
-        return Pattern.compile("(?i)\\b" + Pattern.quote(name) + "\\b").matcher(text).find();
+    private boolean containsName(String text, String name) {
+        if (!text.toLowerCase(Locale.ROOT).contains(name.toLowerCase(Locale.ROOT))) return false; // schneller Vorab-Check
+        return namePatterns.computeIfAbsent(name, n -> Pattern.compile("(?i)\\b" + Pattern.quote(n) + "\\b")).matcher(text).find();
     }
 
     /** Prefix & Suffix: LuckPerms (falls installiert) oder chat.format.groups. */

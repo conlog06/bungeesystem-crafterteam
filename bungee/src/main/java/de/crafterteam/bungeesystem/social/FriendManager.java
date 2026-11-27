@@ -307,9 +307,19 @@ public final class FriendManager {
         plugin.db().submit(con -> {
             if (!Social.setting(Social.settings(con, id), "notify")) return List.<UUID>of();
             List<UUID> out = new ArrayList<>();
-            for (UUID f : ids(con, id)) {
-                ProxiedPlayer fp = ProxyServer.getInstance().getPlayer(f);
-                if (fp != null && Social.setting(Social.settings(con, f), "notify")) out.add(f);
+            List<UUID> onlineFriends = new ArrayList<>();
+            for (UUID f : ids(con, id)) if (ProxyServer.getInstance().getPlayer(f) != null) onlineFriends.add(f);
+            // Performance: Einstellungen aller Online-Freunde mit EINER Abfrage statt einer pro Freund
+            if (!onlineFriends.isEmpty()) {
+                java.util.Map<UUID, String> settings = new java.util.HashMap<>();
+                String in = String.join(",", java.util.Collections.nCopies(onlineFriends.size(), "?"));
+                try (java.sql.PreparedStatement ps = con.prepareStatement("select uuid, friend_settings from ls_players where uuid in (" + in + ")")) {
+                    for (int i = 0; i < onlineFriends.size(); i++) ps.setString(i + 1, onlineFriends.get(i).toString());
+                    try (java.sql.ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) settings.put(UUID.fromString(rs.getString(1)), rs.getString(2));
+                    }
+                }
+                for (UUID f : onlineFriends) if (Social.setting(settings.get(f), "notify")) out.add(f);
             }
             if (online) {
                 long requests = Database.longValue(con, "select count(*) from ls_friend_requests where receiver = ?", 0, id.toString());

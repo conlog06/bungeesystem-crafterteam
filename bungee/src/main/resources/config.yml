@@ -29,6 +29,7 @@ modules:
   staffstats: true
   support: true
   bugreport: true
+  tickets: true
   # Social
   friends: true
   party: true
@@ -59,6 +60,7 @@ modules:
   # Extern (erst Zugangsdaten unten eintragen)
   discord: false
   teamspeak: false
+  webpanel: false           # Web-Dashboard im Browser (Port unten unter webpanel)
 
 # Ressourcenpaket für das ganze Netzwerk (Icons, Rang-Badges, Menü-Items) – wird nur EINMAL pro Sitzung geladen.
 # url leer = das vom LobbySystem selbst gehostete Pack nutzen. Auf Nicht-Lobby-Servern schickt es das BungeeSystem-Addon.
@@ -106,6 +108,7 @@ commands:
   exemption: [exemption, ea]
   support: [support]
   bugreport: [bugreport, bug]
+  ticket: [ticket, tickets]
   maintenance: [maintenance, wartung]
   motd: [motd]
   # /l und /lobby: in einer Lobby wird man zum Spawn teleportiert (LobbySystem)
@@ -253,6 +256,31 @@ warn:
 bugreport:
   reward-coins: 250         # Coins für angenommene Bugs
   max-open: 3
+
+# Ticket-System: /ticket create <Text> – Verlauf bleibt gespeichert, Antworten auch offline. Team: bungeesystem.ticket.manage
+tickets:
+  max-open: 3
+
+# Auto-Moderation: Verstöße im Chat geben Punkte, ab X Punkten im Zeitfenster gibt es automatisch einen Mute (steigend).
+# Umgehen: bungeesystem.automod.bypass
+automod:
+  enabled: true
+  points:
+    filter: 3               # verbotenes Wort / Werbung
+    spam: 1                 # zu schnell geschrieben
+    similar: 1              # gleiche Nachricht wiederholt
+    caps: 1                 # zu viele Großbuchstaben
+  window-minutes: 30
+  mute-at-points: 9
+  mute-durations: [10m, 1h, 6h, 1d]   # 1., 2., 3., 4.+ Auto-Mute
+
+# Web-Dashboard (nur lesend): http://<public-host>:<port>/ – Token wird beim ersten Start erzeugt.
+# Port in der Firewall nur für das Team freigeben oder hinter einen Reverse-Proxy (HTTPS) legen.
+webpanel:
+  host: 0.0.0.0
+  port: 8166
+  public-host: localhost
+  token: ''
 
 # ═══════════════════════════════════════════════════════════════════
 #  Netzwerk

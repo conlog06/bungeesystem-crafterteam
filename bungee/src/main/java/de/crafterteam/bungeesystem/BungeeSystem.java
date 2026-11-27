@@ -88,6 +88,7 @@ public final class BungeeSystem extends Plugin {
         DEFAULT_COMMANDS.put("exemption", List.of("exemption", "ea"));
         DEFAULT_COMMANDS.put("support", List.of("support"));
         DEFAULT_COMMANDS.put("bugreport", List.of("bugreport", "bug"));
+        DEFAULT_COMMANDS.put("ticket", List.of("ticket", "tickets"));
         DEFAULT_COMMANDS.put("maintenance", List.of("maintenance", "wartung"));
         DEFAULT_COMMANDS.put("motd", List.of("motd"));
         DEFAULT_COMMANDS.put("hub", List.of("hub", "lobby", "l"));
@@ -126,6 +127,8 @@ public final class BungeeSystem extends Plugin {
     private PollModule poll;
     private DiscordModule discord;
     private TeamSpeakModule teamspeak;
+    private de.crafterteam.bungeesystem.team.TicketModule tickets;
+    private de.crafterteam.bungeesystem.web.WebPanel webPanel;
     private final Map<String, String> commandNames = new ConcurrentHashMap<>();
     /** Module, die beim Start geladen wurden bzw. per /bungeesystem modules disable kurz aus sind. */
     private final Set<String> loadedModules = ConcurrentHashMap.newKeySet();
@@ -207,6 +210,10 @@ public final class BungeeSystem extends Plugin {
             support.registerSupport();
         });
         load("bugreport", () -> SupportModule.registerBugReport(this));
+        load("tickets", () -> {
+            tickets = new de.crafterteam.bungeesystem.team.TicketModule(this);
+            tickets.register();
+        });
         // ---- Netzwerk
         network = new NetworkModule(this);
         pm.registerListener(this, network);
@@ -239,6 +246,10 @@ public final class BungeeSystem extends Plugin {
         load("teamspeak", () -> {
             teamspeak = new TeamSpeakModule(this);
             teamspeak.start();
+        });
+        load("webpanel", () -> {
+            webPanel = new de.crafterteam.bungeesystem.web.WebPanel(this);
+            webPanel.start();
         });
         currentModule = null;
         command("admin", n -> new AdminCmd(this, n));
@@ -308,6 +319,7 @@ public final class BungeeSystem extends Plugin {
 
     @Override
     public void onDisable() {
+        if (webPanel != null) webPanel.stop();
         if (teamspeak != null) teamspeak.stop();
         if (discord != null) discord.stop();
         if (players != null) {
@@ -326,9 +338,9 @@ public final class BungeeSystem extends Plugin {
 
     /** Alle Module in Anzeige-Reihenfolge. */
     public static final List<String> MODULES = List.of("punish", "report", "notify", "friends", "party", "clan", "onlinetime", "chat", "cmdblock",
-            "teamchat", "adminchat", "teamonline", "jointo", "whereis", "staffstats", "warn", "exemption", "support", "bugreport",
+            "teamchat", "adminchat", "teamonline", "jointo", "whereis", "staffstats", "warn", "exemption", "support", "bugreport", "tickets",
             "maintenance", "motd", "hub", "servers", "broadcast", "autobroadcast", "help", "links", "ping", "online", "whereami", "debug",
-            "poll", "joinme", "advert", "coins", "rankinfo", "discord", "teamspeak");
+            "poll", "joinme", "advert", "coins", "rankinfo", "discord", "teamspeak", "webpanel");
 
     private void load(String module, Runnable init) {
         if (!module(module)) return;
@@ -493,6 +505,14 @@ public final class BungeeSystem extends Plugin {
         return poll;
     }
 
+    public de.crafterteam.bungeesystem.team.TicketModule tickets() {
+        return tickets;
+    }
+
+    public de.crafterteam.bungeesystem.web.WebPanel webPanel() {
+        return webPanel;
+    }
+
     public DiscordModule discord() {
         return discord;
     }
@@ -554,6 +574,11 @@ public final class BungeeSystem extends Plugin {
                 m().send(s, "general.reloaded");
                 return;
             }
+            if (args.length > 0 && args[0].equalsIgnoreCase("web")) {
+                if (plugin.webPanel == null) m().send(s, "general.web-off");
+                else m().send(s, "general.web-link", "url", plugin.webPanel.url());
+                return;
+            }
             if (args.length > 0 && args[0].equalsIgnoreCase("debug")) {
                 m().send(s, "general.debug-header", "db", plugin.databaseId());
                 for (ServerInfo info : ProxyServer.getInstance().getServers().values()) {
@@ -613,7 +638,7 @@ public final class BungeeSystem extends Plugin {
 
         @Override
         protected List<String> complete(CommandSender s, String[] args) {
-            if (args.length == 1) return filter(args[0], "reload", "info", "modules", "debug");
+            if (args.length == 1) return filter(args[0], "reload", "info", "modules", "debug", "web");
             if (args.length == 2 && args[0].equalsIgnoreCase("modules")) return filter(args[1], "list", "enable", "disable", "reload");
             if (args.length == 3 && args[0].equalsIgnoreCase("modules")) return filter(args[2], MODULES);
             return List.of();

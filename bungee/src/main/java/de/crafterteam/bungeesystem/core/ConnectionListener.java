@@ -51,6 +51,7 @@ public final class ConnectionListener implements Listener {
             if (!p.isConnected()) return;
             if (plugin.friends() != null) plugin.friends().announce(p, true);
             if (plugin.reports() != null) plugin.reports().remind(p);
+            if (plugin.tickets() != null) plugin.tickets().remind(p);
         }, 2, TimeUnit.SECONDS);
     }
 

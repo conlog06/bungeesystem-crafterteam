@@ -48,6 +48,7 @@ Arbeitet mit derselben MySQL-Datenbank wie das [LobbySystem](https://github.com/
 - **Persönlicher Chat-Schalter** `/chat` (Permission `bungeesystem.chat.toggle`)
 - **@Erwähnungen** – der Name wird für den markierten Spieler hervorgehoben + Hinweis in der Actionbar
 - **Chat-Format** vollständig anpassbar (`{clan}{prefix}{name}{suffix} » {message}`), Prefix aus **LuckPerms** oder eigenen Gruppen
+- **Auto-Mod:** Verstöße (Filter, Spam, Wiederholung, Caps) geben Punkte – ab `automod.mute-at-points` im Zeitfenster automatischer Mute mit steigender Dauer (10m → 1h → 6h → 1d), Warnung kurz vorher, Team wird benachrichtigt. Bypass: `bungeesystem.automod.bypass`
 - **CMDBlock:** einzelne Befehle (`/pl`, `/ver`, `bukkit:…`) sperren, Bypass mit Permission
 
 > **Chat-Format & MissileWars:** Server in `chat.format.ignored-servers` (Standard `MissileWars*`) behalten ihr eigenes Format –
@@ -61,6 +62,8 @@ Arbeitet mit derselben MySQL-Datenbank wie das [LobbySystem](https://github.com/
 - **StaffStats** `/staff <Name> [7d]` – Bans, Mutes, Kicks, Warns, erledigte Reports eines Teammitglieds
 - **Support** `/support [Anliegen]` – Team nimmt an (`/support accept`), beide schreiben im privaten Support-Raum
 - **BugReport** `/bugreport <Server> <Text>` – Team: `list`, `info|accept|deny <ID>`; angenommene Bugs bringen Coins
+- **Tickets** `/ticket create <Anliegen>` – Verlauf in der Datenbank, Antworten kommen auch an, wenn der Spieler offline war (Hinweis beim Join). Team (`bungeesystem.ticket.manage`): `list all`, `view|claim|reply|close <ID>`
+- **Web-Dashboard** (`modules.webpanel: true`) – Browser-Übersicht mit Online-Spielern, Servern, 24-h-Verlauf, letzten Bans/Mutes, offenen Reports & Tickets. Token-geschützt, Link per `/bsys web`. Port (Standard 8166) nur fürs Team freigeben
 - `/history <Spieler> clear` löscht erledigte Einträge (aktive Strafen bleiben)
 
 ### Netzwerk
@@ -110,6 +113,8 @@ Arbeitet mit derselben MySQL-Datenbank wie das [LobbySystem](https://github.com/
 | `/mute <Spieler> [ID \| Dauer Grund]` | `bungeesystem.mute` | Muten |
 | `/unban`, `/unmute <Spieler>` | `bungeesystem.unban`, `.unmute` | Strafe aufheben |
 | `/kick <Spieler> [Grund]` | `bungeesystem.kick` | Kicken |
+| `/ticket create\|list\|view\|reply\|close` | – (Team: `bungeesystem.ticket.manage`) | Ticket-System |
+| `/bsys web` | `bungeesystem.admin` | Link zum Web-Dashboard |
 | `/punish <Spieler>` (`/bansystem`) | `bungeesystem.punish.gui` | Straf-GUI |
 | `/check <Spieler>` | `bungeesystem.check` (`.ip` für IP & Alts) | Spieler-Infos |
 | `/history <Spieler>` | `bungeesystem.history` | Straf-History |

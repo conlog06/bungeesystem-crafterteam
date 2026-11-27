@@ -17,6 +17,8 @@ prefix:
   exemption: '&#56ab2f&lEXEMPTION &8» &7'
   support: '&#00b09b&lSUPPORT &8» &7'
   bugreport: '&#e94057&lBUG &8» &7'
+  ticket: '&#00b09b&lTICKET &8» &7'
+  automod: '&#ff4b2b&lAUTOMOD &8» &7'
   maintenance: '&#f7971e&lWARTUNG &8» &7'
   motd: '&#3a7bd5&lMOTD &8» &7'
   hub: '&#00d2ff&lLOBBY &8» &7'
@@ -54,6 +56,8 @@ prefix:
   cmdblock: '&#3a7bd5&lSYSTEM &8» &7'
 
 general:
+  web-off: '{prefix}&7Das Web-Dashboard ist aus. &8(config.yml → modules.webpanel: true)'
+  web-link: '{prefix}&7Web-Dashboard: [&e&nÖffnen](url:{url}|&7Im Browser öffnen) &8(Link nicht teilen – enthält den Zugangs-Token)'
   no-permission: '{prefix}&cDazu hast du keine Rechte.'
   only-players: '{prefix}&cNur für Spieler.'
   player-not-found: '{prefix}&cDer Spieler &e{player} &cwurde nicht gefunden.'
@@ -520,6 +524,44 @@ bugreport:
   denied: '{prefix}&7Bug &f#{id} &7abgelehnt.'
   reporter-accepted: '{prefix}&aDein Bug-Report &f#{id} &awurde angenommen! &7+&e{coins} Coins'
   reporter-denied: '{prefix}&7Dein Bug-Report &f#{id} &7wurde leider abgelehnt.'
+ticket:
+  help:
+    - '{prefix}&e/{cmd} create <Anliegen> &8┃ &7Ticket erstellen'
+    - '{prefix}&e/{cmd} list &8┃ &e/{cmd} view <ID> &8┃ &e/{cmd} reply <ID> <Text> &8┃ &e/{cmd} close <ID>'
+  help-staff:
+    - '{prefix}&e/{cmd} list all &8┃ &7alle offenen Tickets'
+    - '{prefix}&e/{cmd} view|claim|close <ID> &8┃ &e/{cmd} reply <ID> <Text>'
+  too-short: '{prefix}&cBitte beschreibe dein Anliegen etwas genauer.'
+  too-many: '{prefix}&cDu hast schon {max} offene Tickets. Warte auf eine Antwort oder schließe eins.'
+  created: '{prefix}&aTicket &f#{id} &awurde erstellt. &7Das Team antwortet so schnell wie möglich. [&8[&eAnsehen&8]](/{cmd} view {id})'
+  notify-new: '{prefix}&e{player} &7hat Ticket &f#{id} &7erstellt: &f{message} [&a&lANSEHEN](/{cmd} view {id}|&aTicket öffnen)'
+  notify-reply: '{prefix}&e{player} &7hat auf Ticket &f#{id} &7geantwortet: &f{message} [&a&lANSEHEN](/{cmd} view {id})'
+  list-header: '{prefix}&7Tickets: &f{count}'
+  list-empty: '{prefix}&7Keine Tickets. Neu: &e/{cmd} create <Anliegen>'
+  list-staff-hint: '{prefix}&7Alle offenen Tickets: [&e/{cmd} list all](/{cmd} list all)'
+  list-entry: '&8» [&f#{id}](/{cmd} view {id}|&7Öffnen) &e{player} &8┃ &f{message} &8┃ {status} &8┃ &7{date}'
+  status-open: '&cwartet'
+  status-answered: '&abeantwortet'
+  status-closed: '&8geschlossen'
+  view-header:
+    - '&8&m        &r &#00b09b&lTICKET #{id} &8&m        '
+    - '&8» &7Von: &f{player} &8┃ &7Status: {status} &8┃ &7Bearbeiter: &f{assignee}'
+  view-player: '&8[&7{date}&8] &e{player}&8: &f{message}'
+  view-staff: '&8[&7{date}&8] &#00b09b{player} &8(Team)&8: &f{message}'
+  view-actions: '&8» [&a&lANTWORTEN](suggest:/{cmd} reply {id} |&7Antwort schreiben) [&c&lSCHLIESSEN](/{cmd} close {id})'
+  not-found: '{prefix}&cTicket &e#{id} &cnicht gefunden.'
+  closed-already: '{prefix}&7Ticket &f#{id} &7ist bereits geschlossen.'
+  replied: '{prefix}&7Antwort zu Ticket &f#{id} &7gespeichert.'
+  answer-received: '{prefix}&e{staff} &7hat auf dein Ticket &f#{id} &7geantwortet: &f{message} [&8[&eAnsehen&8]](/{cmd} view {id})'
+  claimed: '{prefix}&7Du bearbeitest jetzt Ticket &f#{id}&7.'
+  closed: '{prefix}&7Ticket &f#{id} &7wurde geschlossen.'
+  closed-by-staff: '{prefix}&e{staff} &7hat dein Ticket &f#{id} &7geschlossen.'
+  reminder-player: '{prefix}&aDu hast &f{count} &abeantwortete(s) Ticket(s)! [&8[&eAnsehen&8]](/{cmd} list)'
+  reminder-staff: '{prefix}&7Es warten &e{count} &7Ticket(s) auf eine Antwort. [&8[&eAnzeigen&8]](/{cmd} list all)'
+automod:
+  warning: '{prefix}&cAchtung! &7Du hast &e{points}&7/&e{limit} &7Verwarnpunkte – bei &e{limit} &7wirst du automatisch gemutet.'
+  reason: 'Auto-Mod: wiederholte Chat-Verstöße'
+  notify: '{prefix}&e{player} &7wurde automatisch für &e{duration} &7gemutet &8(&7Stufe {level}&8)'
 
 # ─── Netzwerk ───────────────────────────────────────────────────────
 maintenance:

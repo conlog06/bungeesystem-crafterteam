@@ -160,6 +160,11 @@ public final class Database {
                         + "status varchar(16) not null default 'OPEN', handler varchar(16) not null default '', index idx_status (status))");
                 st.executeUpdate("create table if not exists bs_adverts (uuid varchar(36) not null primary key, referrer varchar(36) not null, "
                         + "created bigint not null, index idx_referrer (referrer))");
+                st.executeUpdate("create table if not exists bs_tickets (id int auto_increment primary key, uuid varchar(36) not null, "
+                        + "player_name varchar(16) not null, subject varchar(128) not null, status varchar(16) not null default 'OPEN', "
+                        + "assignee varchar(16) not null default '', created bigint not null, updated bigint not null, index idx_status (status), index idx_uuid (uuid))");
+                st.executeUpdate("create table if not exists bs_ticket_messages (id int auto_increment primary key, ticket_id int not null, "
+                        + "author varchar(16) not null, staff tinyint(1) not null default 0, message text not null, created bigint not null, index idx_ticket (ticket_id))");
                 st.executeUpdate("create table if not exists bs_ts_verify (uuid varchar(36) not null primary key, ts_uid varchar(64) not null, "
                         + "created bigint not null)");
                 // ---- LobbySystem-Tabellen (falls der Proxy zuerst startet)

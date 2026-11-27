@@ -347,9 +347,12 @@ public final class PartyManager {
     public void onSwitch(ProxiedPlayer p, ServerInfo server) {
         if (!plugin.config().getBoolean("party.follow", true)) return;
         if (plugin.matches(server.getName(), plugin.config().getStringList("party.follow-ignore"))) return;
-        party(p.getUniqueId()).thenAccept(party -> {
-            if (party != null && party.isLeader(p.getUniqueId()) && party.members().size() > 1) pull(party, server, p.getUniqueId());
-        });
+        UUID id = p.getUniqueId();
+        // Performance: erst eine einzelne Abfrage, ob der Spieler überhaupt eine Party leitet (der Normalfall ist "nein")
+        plugin.db().submit(con -> Database.string(con, "select id from ls_parties where leader = ? limit 1", id.toString()) == null ? null : load(con, id))
+                .thenAccept(party -> {
+                    if (party != null && party.isLeader(id) && party.members().size() > 1) pull(party, server, id);
+                });
     }
 
     /** Leader geht offline → Leitung an ein Online-Mitglied. */
