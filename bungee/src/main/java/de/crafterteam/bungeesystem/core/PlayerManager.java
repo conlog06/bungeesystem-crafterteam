@@ -62,6 +62,20 @@ public final class PlayerManager {
         return "";
     }
 
+    /**
+     * Lokale/private Adresse (127.0.0.1, 192.168.x, 10.x …)? Dann ist sie für IP-Bans & Zweitaccount-Erkennung wertlos –
+     * z. B. wenn alle über localhost oder dasselbe Heimnetz verbinden.
+     */
+    public static boolean isLocal(String ip) {
+        if (ip == null || ip.isBlank()) return true;
+        try {
+            java.net.InetAddress a = java.net.InetAddress.getByName(ip);
+            return a.isLoopbackAddress() || a.isSiteLocalAddress() || a.isLinkLocalAddress() || a.isAnyLocalAddress();
+        } catch (Exception e) {
+            return true;
+        }
+    }
+
     public Session session(UUID uuid) {
         return sessions.get(uuid);
     }
@@ -181,7 +195,7 @@ public final class PlayerManager {
 
     /** Accounts mit derselben IP (für /check). */
     public CompletableFuture<List<String>> alts(String ip, UUID except) {
-        if (ip == null || ip.isBlank()) return CompletableFuture.completedFuture(List.of());
+        if (ip == null || ip.isBlank() || isLocal(ip)) return CompletableFuture.completedFuture(List.of());
         return plugin.db().submit(con -> {
             List<String> out = new ArrayList<>();
             try (PreparedStatement ps = con.prepareStatement("select name from bs_players where ip = ? and uuid <> ? order by last_join desc limit 15")) {

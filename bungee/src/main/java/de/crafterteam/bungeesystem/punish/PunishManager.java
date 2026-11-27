@@ -122,7 +122,7 @@ public final class PunishManager {
                     continue;
                 }
                 b.put(p.uuid(), p);
-                if (!p.ip().isBlank()) ip.put(p.ip(), p);
+                if (!p.ip().isBlank() && !de.crafterteam.bungeesystem.core.PlayerManager.isLocal(p.ip())) ip.put(p.ip(), p);
             }
             for (Punishment p : query(con, Type.MUTE, "active = 1", null)) {
                 if (p.expired()) {
@@ -175,7 +175,7 @@ public final class PunishManager {
     public Punishment banFor(UUID uuid, String ip) {
         Punishment p = ban(uuid);
         if (p != null) return p;
-        if (!cfg().getBoolean("ip-ban", true) || ip == null || ip.isBlank()) return null;
+        if (!cfg().getBoolean("ip-ban", true) || ip == null || ip.isBlank() || de.crafterteam.bungeesystem.core.PlayerManager.isLocal(ip)) return null;
         Punishment byIp = ipBans.get(ip);
         if (byIp == null) return null;
         return ban(byIp.uuid());
@@ -221,7 +221,8 @@ public final class PunishManager {
         ProxiedPlayer online = ProxyServer.getInstance().getPlayer(target.uuid());
         String server = online != null && online.getServer() != null ? online.getServer().getInfo().getName() : "";
         String ip = online != null ? de.crafterteam.bungeesystem.core.PlayerManager.ip(online) : target.ip();
-        boolean ipBan = cfg().getBoolean("ip-ban", true);
+        // lokale/private IPs (localhost, Heimnetz) nie sperren – sonst trifft es alle, die darüber verbinden
+        boolean ipBan = cfg().getBoolean("ip-ban", true) && !de.crafterteam.bungeesystem.core.PlayerManager.isLocal(ip);
         return plugin.db().submit(con -> {
             long dur = reason != null ? reason.duration() : duration;
             if (reason != null && dur > 0 && cfg().getBoolean("escalation.enabled", true)) {
@@ -290,7 +291,7 @@ public final class PunishManager {
             ProxiedPlayer online = ProxyServer.getInstance().getPlayer(p.uuid());
             if (online != null) online.disconnect(TextComponent.fromLegacyText(screen(p)));
             // weitere Accounts mit derselben IP ebenfalls trennen
-            if (!p.ip().isBlank()) {
+            if (!p.ip().isBlank() && !de.crafterteam.bungeesystem.core.PlayerManager.isLocal(p.ip())) {
                 for (ProxiedPlayer other : ProxyServer.getInstance().getPlayers()) {
                     if (!other.getUniqueId().equals(p.uuid()) && p.ip().equals(de.crafterteam.bungeesystem.core.PlayerManager.ip(other))) {
                         other.disconnect(TextComponent.fromLegacyText(screen(p)));

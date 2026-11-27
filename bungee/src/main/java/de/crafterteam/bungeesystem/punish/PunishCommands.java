@@ -265,7 +265,8 @@ public final class PunishCommands {
                     if (s.hasPermission("bungeesystem.check.ip")) {
                         String ip = online != null ? de.crafterteam.bungeesystem.core.PlayerManager.ip(online) : t.ip();
                         plugin.players().alts(ip, t.uuid()).thenAccept(alts -> {
-                            m().send(s, "check.ip", "ip", ip == null || ip.isBlank() ? "-" : ip);
+                            m().send(s, "check.ip", "ip", ip == null || ip.isBlank() ? "-" : ip
+                                    + (de.crafterteam.bungeesystem.core.PlayerManager.isLocal(ip) ? m().raw("check.ip-local") : ""));
                             m().send(s, "check.alts", "alts", alts.isEmpty() ? "-" : String.join(", ", alts));
                         });
                     }

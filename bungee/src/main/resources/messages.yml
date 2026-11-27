@@ -176,6 +176,7 @@ check:
   muted: '&8» &7Mute: &cJa &8┃ &f{reason} &8┃ &7von &f{staff} &8┃ &7noch &e{remaining} &8{id}'
   not-muted: '&8» &7Mute: &aNein'
   ip: '&8» &7IP: &f{ip}'
+  ip-local: ' &8(lokal – keine IP-Sperre)'
   alts: '&8» &7Gleiche IP: &f{alts}'
 history:
   usage: '{prefix}&7/{cmd} <Spieler>'
