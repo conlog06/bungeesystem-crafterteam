@@ -276,6 +276,19 @@ public final class BungeeSystem extends Plugin {
         for (ServerInfo s : getProxy().getServers().values()) {
             if (!s.getPlayers().isEmpty()) rows.add(new Object[]{s.getName(), s.getPlayers().size()});
         }
+        // leere Server anpingen – sind sie erreichbar, erscheinen sie im Navigator als "Online" (0 Spieler)
+        for (ServerInfo s : getProxy().getServers().values()) {
+            if (!s.getPlayers().isEmpty()) continue;
+            s.ping((ping, err) -> {
+                if (err != null || ping == null) return;
+                int max = ping.getPlayers() == null ? 0 : ping.getPlayers().getMax();
+                String name = s.getName();
+                long t = System.currentTimeMillis();
+                db.run(con -> Database.exec(con, "insert into ls_servers (name, online, max_players, updated) values (?, 0, ?, ?) "
+                        + "on duplicate key update online = 0, max_players = if(max_players = 0, values(max_players), max_players), updated = values(updated)",
+                        name, max, t));
+            });
+        }
         if (rows.isEmpty()) return;
         long now = System.currentTimeMillis();
         db.run(con -> {

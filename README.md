@@ -88,6 +88,12 @@ Arbeitet mit derselben MySQL-Datenbank wie das [LobbySystem](https://github.com/
 - **TeamSpeak-Verify** `/tsverify` → Code im TS → `/tsverify <Code>` → Servergruppe + Beschreibung = Minecraft-Name;
   `/tsverify delete`, `/tsverify remove <Spieler>`
 
+### Ressourcenpaket (netzwerkweit)
+- Das LobbySystem hostet das Pack (Icons, Rang-Badges, Menü-Items), der Proxy verteilt es: In der Lobby schickt es das LobbySystem,
+  auf MissileWars & allen anderen Servern das **Addon** – mit derselben Pack-ID, geladen wird es **nur einmal pro Sitzung**
+- Eigene URL möglich: `resourcepack.url` + `sha1` in der `config.yml`; `required: true` = Pflicht (Ablehnen → Kick)
+- Leere Server werden angepingt → im Lobby-Navigator „Online" auch ohne Spieler
+
 ## Installation
 
 1. `BungeeSystem-x.jar` in den Proxy, `BungeeSystemAddon-x.jar` in alle Paper-Server.

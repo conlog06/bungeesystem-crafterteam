@@ -141,11 +141,54 @@ public final class BungeeSystemAddon extends JavaPlugin implements Listener, Plu
                     onlineTime.put(uuid, in.readLong());
                 }
                 case "GUI" -> readGui(in);
+                case "PACK" -> readPack(in);
                 default -> {
                 }
             }
         } catch (IOException | IllegalArgumentException e) {
             getLogger().warning("Ungültige Proxy-Nachricht: " + e.getMessage());
+        }
+    }
+
+    // ---------------------------------------------------------------- Ressourcenpaket
+
+    /** Gleiche ID wie im LobbySystem – so lädt der Client das Pack im ganzen Netzwerk nur einmal. */
+    static final UUID PACK_ID = UUID.nameUUIDFromBytes("lobbysystem-pack".getBytes());
+    private final java.util.Set<UUID> packRequired = ConcurrentHashMap.newKeySet();
+
+    private void readPack(DataInputStream in) throws IOException {
+        UUID uuid = UUID.fromString(in.readUTF());
+        String url = in.readUTF(), sha1 = in.readUTF();
+        boolean required = in.readBoolean();
+        String prompt = in.readUTF();
+        boolean loaded = in.readBoolean();
+        // In der Lobby verschickt das LobbySystem das Pack selbst
+        if (loaded || url.isBlank() || !sha1.matches("[0-9a-f]{40}") || getServer().getPluginManager().getPlugin("LobbySystem") != null) return;
+        Player p = Bukkit.getPlayer(uuid);
+        if (p == null) return;
+        if (required) packRequired.add(uuid);
+        try {
+            p.sendResourcePacks(net.kyori.adventure.resource.ResourcePackRequest.resourcePackRequest()
+                    .packs(net.kyori.adventure.resource.ResourcePackInfo.resourcePackInfo(PACK_ID, java.net.URI.create(url), sha1))
+                    .required(required).replace(false).prompt(LEGACY.deserialize(prompt)).build());
+        } catch (RuntimeException e) {
+            getLogger().warning("Ressourcenpaket konnte nicht gesendet werden: " + e.getMessage());
+        }
+    }
+
+    @EventHandler
+    public void onPackStatus(org.bukkit.event.player.PlayerResourcePackStatusEvent e) {
+        Player p = e.getPlayer();
+        var st = e.getStatus();
+        if (st == org.bukkit.event.player.PlayerResourcePackStatusEvent.Status.ACCEPTED
+                || st == org.bukkit.event.player.PlayerResourcePackStatusEvent.Status.DOWNLOADED) return;
+        boolean ok = st == org.bukkit.event.player.PlayerResourcePackStatusEvent.Status.SUCCESSFULLY_LOADED;
+        send(p, "PACK_STATUS", out -> {
+            out.writeUTF(p.getUniqueId().toString());
+            out.writeBoolean(ok);
+        });
+        if (!ok && packRequired.contains(p.getUniqueId())) {
+            p.kick(AMP.deserialize(getConfig().getString("resourcepack-kick", "&cBitte nimm das Ressourcenpaket an, um zu spielen.")));
         }
     }
 
@@ -251,6 +294,7 @@ public final class BungeeSystemAddon extends JavaPlugin implements Listener, Plu
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
         clanTags.remove(e.getPlayer().getUniqueId());
+        packRequired.remove(e.getPlayer().getUniqueId());
         onlineTime.remove(e.getPlayer().getUniqueId());
     }
 }

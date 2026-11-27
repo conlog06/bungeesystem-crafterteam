@@ -33,6 +33,8 @@ public final class PlayerManager {
         public volatile long lastFlush;
         public final Set<String> notifyOff = ConcurrentHashMap.newKeySet();
         public volatile boolean chatOff;
+        /** Ressourcenpaket in dieser Sitzung geladen (dann beim Serverwechsel nicht erneut senden). */
+        public volatile boolean packLoaded;
         public volatile boolean loaded;
 
         Session(UUID uuid, String name, String ip) {

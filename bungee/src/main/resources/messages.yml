@@ -66,6 +66,9 @@ general:
   module-disabled: '{prefix}&cDas Modul &e{module} &cist gerade deaktiviert.'
   db-warning: '{prefix}&c&lACHTUNG: &e{plugin} &7auf &f{server} &7nutzt {reason}&7 – Coins, Freunde, Party & Clans sind dort nicht mit dem Proxy geteilt! &8(Datenbank in der Config angleichen)'
   uuid-warning: '{prefix}&c&lUUID-FEHLER: &f{server} &7sieht dich mit einer anderen UUID als der Proxy. &7BungeeCord: &eip_forward: true&7, Server: &esettings.bungeecord: true &7(spigot.yml) – sonst sind Coins/Freunde/Clans getrennt!'
+  pack-prompt:
+    - '&#00d2ff&lCRAFTERTEAM &7Ressourcenpaket'
+    - '&7Für Icons, Rang-Badges & Menüs – bitte annehmen!'
   debug-header: '{prefix}&7Proxy-Datenbank: &f{db}'
   debug-server: '&8» &f{server} &8(&7{players}&8) &8┃ &7{plugin} &8┃ &7DB: &f{storage} &8┃ &7Chat: &f{chat}'
   debug-coins: '&8» &7Coins von &e{player}&7: Datenbank &f{db} &8┃ &7Server-Cache &f{live}' 

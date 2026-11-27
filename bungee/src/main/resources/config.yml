@@ -60,7 +60,15 @@ modules:
   discord: false
   teamspeak: false
 
-# Spielerzahlen aller Server mit Spielern in ls_servers schreiben (Freunde-Status in der Lobby)
+# Ressourcenpaket für das ganze Netzwerk (Icons, Rang-Badges, Menü-Items) – wird nur EINMAL pro Sitzung geladen.
+# url leer = das vom LobbySystem selbst gehostete Pack nutzen. Auf Nicht-Lobby-Servern schickt es das BungeeSystem-Addon.
+resourcepack:
+  enabled: true
+  url: ''
+  sha1: ''
+  required: false
+
+# Spielerzahlen aller Server in ls_servers schreiben (leere Server werden angepingt) (Freunde-Status in der Lobby)
 sync-server-status: true
 
 # Befehlsnamen & Aliase – erster Eintrag = Hauptname, leere Liste [] = Befehl aus.

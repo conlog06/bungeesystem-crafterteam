@@ -68,6 +68,7 @@ public final class ConnectionListener implements Listener {
         ProxyServer.getInstance().getScheduler().schedule(plugin, () -> {
             if (!p.isConnected() || p.getServer() == null || !p.getServer().getInfo().equals(server)) return;
             plugin.bridge().hello(p);
+            plugin.bridge().pack(p);
             PlayerManager.Session s = plugin.players().session(p.getUniqueId());
             if (s != null) plugin.bridge().onlineTime(p, s.onlineTime());
             if (plugin.clans() != null) {

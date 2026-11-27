@@ -95,6 +95,37 @@ public final class Bridge implements Listener {
         return da.equals(db);
     }
 
+    // ---------------------------------------------------------------- Ressourcenpaket
+
+    private volatile String lobbyPackUrl = "", lobbyPackSha = "";
+
+    /** URL & SHA-1 des Netzwerk-Packs: aus config.yml oder vom LobbySystem gemeldet. */
+    public String[] packInfo() {
+        var c = plugin.config().getSection("resourcepack");
+        String url = c.getString("url", "").trim(), sha = c.getString("sha1", "").trim().toLowerCase();
+        if (!url.isEmpty() && sha.matches("[0-9a-f]{40}")) return new String[]{url, sha};
+        return new String[]{lobbyPackUrl, lobbyPackSha};
+    }
+
+    /** Nach dem Serverwechsel: Server sagen, ob er das Pack schicken soll (nur einmal pro Sitzung). */
+    public void pack(ProxiedPlayer p) {
+        var c = plugin.config().getSection("resourcepack");
+        if (!c.getBoolean("enabled", true)) return;
+        var session = plugin.players().session(p.getUniqueId());
+        boolean loaded = session != null && session.packLoaded;
+        String[] info = packInfo();
+        boolean required = c.getBoolean("required", false);
+        String prompt = plugin.messages().legacy("general.pack-prompt");
+        send(p, "PACK", out -> {
+            out.writeUTF(p.getUniqueId().toString());
+            out.writeUTF(info[0]);
+            out.writeUTF(info[1]);
+            out.writeBoolean(required);
+            out.writeUTF(prompt);
+            out.writeBoolean(loaded);
+        });
+    }
+
     public boolean hasAddon(ProxiedPlayer p) {
         return p.getServer() != null && addonServers.contains(p.getServer().getInfo().getName());
     }
@@ -273,6 +304,15 @@ public final class Bridge implements Listener {
                     // UUID-Abgleich: sieht der Server denselben Spieler wie der Proxy? (sonst ip_forward/bungeecord aus)
                     if (in.available() > 0) {
                         String seen = in.readUTF();
+                        if (in.available() > 0) {
+                            // LobbySystem meldet sein selbst gehostetes Pack → wird netzwerkweit verteilt
+                            String url = in.readUTF(), sha = in.available() > 0 ? in.readUTF() : "";
+                            if (!url.isBlank() && sha.matches("[0-9a-fA-F]{40}")) {
+                                if (!url.equals(lobbyPackUrl)) plugin.getLogger().info("Ressourcenpaket von " + name + " wird netzwerkweit genutzt: " + url);
+                                lobbyPackUrl = url;
+                                lobbyPackSha = sha.toLowerCase();
+                            }
+                        }
                         if (!seen.equalsIgnoreCase(player.getUniqueId().toString()) && warned.add("uuid:" + name)) {
                             plugin.getLogger().severe("UUID-FEHLER auf " + name + ": Server sieht " + player.getName() + " als " + seen
                                     + ", der Proxy als " + player.getUniqueId() + ". In der BungeeCord-config.yml 'ip_forward: true' und auf dem Server "
@@ -298,6 +338,12 @@ public final class Bridge implements Listener {
                     String run = line;
                     ProxyServer.getInstance().getScheduler().runAsync(plugin,
                             () -> ProxyServer.getInstance().getPluginManager().dispatchCommand(target, run));
+                }
+                case "PACK_STATUS" -> {
+                    UUID uuid = UUID.fromString(in.readUTF());
+                    boolean ok = in.readBoolean();
+                    var session = plugin.players().session(uuid);
+                    if (session != null && uuid.equals(player.getUniqueId())) session.packLoaded = ok;
                 }
                 case "COINS_VALUE" -> {
                     int id = in.readInt();

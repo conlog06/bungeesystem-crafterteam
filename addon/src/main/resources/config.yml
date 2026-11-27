@@ -7,3 +7,6 @@ clantag-in-tab:
   format: '&f{name} &8[&e{tag}&8]'
   # Diese Plugins setzen die Tab-Liste selbst (inkl. Clantag) – dann macht das Addon nichts
   skip-if-plugins: [LobbySystem, MissileWars]
+
+# Kick-Text, wenn das Ressourcenpaket Pflicht ist (BungeeSystem config.yml → resourcepack.required) und abgelehnt wird
+resourcepack-kick: '&cBitte nimm das Ressourcenpaket an, um zu spielen.'
