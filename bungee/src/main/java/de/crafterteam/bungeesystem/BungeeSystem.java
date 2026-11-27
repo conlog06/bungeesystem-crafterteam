@@ -244,6 +244,11 @@ public final class BungeeSystem extends Plugin {
         command("admin", n -> new AdminCmd(this, n));
         bridge.allow(ownCommands);
 
+        if (!getProxy().getConfig().isIpForward()) {
+            getLogger().severe("ip_forward ist in der BungeeCord-config.yml AUS – die Spielserver sehen dann andere UUIDs als der Proxy. "
+                    + "Coins, Freunde, Party & Clans passen so nicht zusammen! Bitte 'ip_forward: true' setzen und auf den Paper-Servern "
+                    + "'settings.bungeecord: true' (spigot.yml).");
+        }
         startTasks();
         // Reload-sicher: bereits verbundene Spieler übernehmen
         for (ProxiedPlayer p : getProxy().getPlayers()) {

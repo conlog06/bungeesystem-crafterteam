@@ -270,6 +270,18 @@ public final class Bridge implements Listener {
                     ServerReport r = new ServerReport(in.readUTF(), in.readUTF(), in.readBoolean(), in.readUTF(), in.readUTF(), System.currentTimeMillis());
                     reports.put(name, r);
                     checkDatabase(name, r, player);
+                    // UUID-Abgleich: sieht der Server denselben Spieler wie der Proxy? (sonst ip_forward/bungeecord aus)
+                    if (in.available() > 0) {
+                        String seen = in.readUTF();
+                        if (!seen.equalsIgnoreCase(player.getUniqueId().toString()) && warned.add("uuid:" + name)) {
+                            plugin.getLogger().severe("UUID-FEHLER auf " + name + ": Server sieht " + player.getName() + " als " + seen
+                                    + ", der Proxy als " + player.getUniqueId() + ". In der BungeeCord-config.yml 'ip_forward: true' und auf dem Server "
+                                    + "'settings.bungeecord: true' (spigot.yml) setzen – sonst sind Coins, Freunde & Clans getrennt!");
+                            for (ProxiedPlayer p : ProxyServer.getInstance().getPlayers()) {
+                                if (p.hasPermission("bungeesystem.admin")) plugin.messages().send(p, "general.uuid-warning", "server", name);
+                            }
+                        }
+                    }
                 }
                 case "RUN" -> {
                     UUID uuid = UUID.fromString(in.readUTF());
